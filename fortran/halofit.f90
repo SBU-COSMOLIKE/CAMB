@@ -298,11 +298,13 @@
 
                 do itf = 1, CAMB_Pk%num_z
 
-                    call Params%DarkEnergy%Effective_w_wa(this%w_hf, this%wa_hf)
+                    
                     if (this%halofit_version == halofit_casarini) then
                         ! calculate equivalent w-constant models (w_hf,0) for w_lam+wa_ppf(1-a) models
                         ! [Casarini+ (2009,2016)].
-                        call PKequal(State,CAMB_Pk%Redshifts(itf),this%w_hf,this%wa_hf,this%w_hf,this%wa_hf)
+                        call PKequal(State,CAMB_Pk%Redshifts(itf), this%w_hf, this%wa_hf)
+                    else
+                        call Params%DarkEnergy%Effective_w_wa(this%w_hf, this%wa_hf)
                     endif
 
                     ! calculate nonlinear wavenumber (rknl), effective spectral index (rneff) and
@@ -3401,32 +3403,46 @@
 
     !!AM End HMcode
 
-    subroutine PKequal(State,redshift,w_lam,wa_ppf,w_hf,wa_hf)
-    !used by halofit_casarini: arXiv:0810.0190, arXiv:1601.07230
-    Type(CAMBdata) :: State
-    real(dl) :: redshift,w_lam,wa_ppf,w_hf,wa_hf
-    real(dl) :: z_star,tau_star,dlsb,dlsb_eq,w_true,wa_true,error
+    subroutine PKequal(State, redshift, w_hf, wa_hf)
+        !used by halofit_casarini: arXiv:0810.0190, arXiv:1601.07230
+        Type(CAMBdata) :: State, State2
+        Type(TLateDE)  :: w_const_type !Joao initializer for dark energy model with constant w
+        real(dl) :: redshift 
+        real(dl), INTENT(OUT) :: w_hf, wa_hf
+        real(dl) :: z_star, tau_star, dlsb, dlsb_eq, error, w_lam
 
-    z_star=State%ThermoDerivedParams( derived_zstar )
-    tau_star=State%TimeOfz(z_star)
-    dlsb=State%TimeOfz(redshift)-tau_star
-    w_true=w_lam
-    wa_true=wa_ppf
-    wa_ppf=0._dl
-    do
-        z_star=State%ThermoDerivedParams( derived_zstar )
-        tau_star=State%TimeOfz(State%ThermoData%z_star)
-        dlsb_eq=State%TimeOfz(redshift)-tau_star
-        error=1.d0-dlsb_eq/dlsb
-        if (abs(error) <= 1d-7) exit
-        w_lam=w_lam*(1+error)**10.d0
-    enddo
-    w_hf=w_lam
-    wa_hf=0._dl
-    w_lam=w_true
-    wa_ppf=wa_true
-    write(*,*)'at z = ',real(redshift),' equivalent w_const =', real(w_hf)
+        z_star   = State%ThermoDerivedParams(derived_zstar)
+        tau_star = State%TimeOfz(z_star)
+        dlsb     = State%TimeOfz(redshift) - tau_star
 
+        !VM INIT w_const_type as w(z) = constant model
+        w_const_type%is_cosmological_constant = .false.
+        w_const_type%model = 1
+
+        State2 = State !Joao Define another state with same cosmological parameters
+
+        w_lam = -0.9                         !VM   INIT TRIAL VALUE
+        w_const_type%w0      = w_lam         !Joao initial value
+        State2%CP%DarkEnergy = w_const_type  !Joao Change State2 dark energy model to constant w
+    
+        do
+            z_star   = State2%ThermoDerivedParams( derived_zstar )
+            tau_star = State2%TimeOfz(z_star)
+            dlsb_eq  = State2%TimeOfz(redshift) - tau_star
+            
+            error    = 1.d0 - dlsb_eq/dlsb  ! shooting error
+            !VM TODO: CHECK IF THE TREASHOLD CHANGES THE CHI2
+            if (abs(error) <= 5d-3) exit    ! will only exit the loop when the error hits this treshold
+            
+            w_lam                = w_lam*(1 + error)**10.d0
+            w_const_type%w0      = w_lam        ! changing the w_const of the model
+            State2%CP%DarkEnergy = w_const_type ! passing the DE model to the state
+        enddo
+
+        w_hf  = w_lam !VM INTENT(OUT) VARIABLES (THE SOLUTION)
+        wa_hf = 0._dl !VM INTENT(OUT) VARIABLES (THE SOLUTION)
+        
+        write(*,*)'at z = ',real(redshift),' equivalent w_const =', real(w_hf)
     end subroutine PKequal
 
 

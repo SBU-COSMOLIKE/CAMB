@@ -6,14 +6,14 @@ module LateDE
     implicit none
 
     type, extends(TDarkEnergyModel) :: TLateDE
+        real(dl) :: w_lam = -1_dl !VM not be used in Casarini except to init the search for effective constant w
+        real(dl) :: wa    = 0._dl !VM not be used in Casarini except to init the search for effective constant w
         
-        real(dl) :: w_lam = -1_dl !p/rho for the dark energy (an effective value, used e.g. for halofit). DHFS: see DarkEnergyInterface.f90
-        ! real(dl) :: wa = 0._dl !may not be used, just for compatibility with e.g. halofit. DHFS: see DarkEnergyInterface.f90
-        real(dl) :: cs2_lam = 1_dl
-        logical :: no_perturbations = .false.
+        logical  :: no_perturbations = .false.
         integer  :: model
-        real(dl) :: w0, wa ! CPL parameters
-        real(dl) :: w1, w2, w3, w4, w5, w6, w7, w8, w9, w10
+        real(dl) :: cs2_lam = 1_dl
+        real(dl) :: winfty  = -1.0_dl
+        real(dl) :: w0, w1, w2, w3, w4, w5, w6, w7, w8, w9
         real(dl) :: z1, z2, z3, z4, z5, z6, z7, z8, z9, z10 ! Binned w
         real(dl) :: fac1, fac2, fac3, fac4, fac5, fac6, fac7, fac8, fac9, fac10 ! Binned w factors
 
@@ -22,7 +22,8 @@ module LateDE
         procedure :: grho_de => TLateDE_grho_de
         procedure :: Init => TLateDE_Init
         procedure :: ReadParams => TLateDE_ReadParams
-        procedure :: PrintFeedback => TLateDE_PrintFeedback 
+        procedure :: PrintFeedback => TLateDE_PrintFeedback
+        ! TODO - investigate if this function (Effective_w_wa) is used on Halofit Casarini 
         procedure :: Effective_w_wa => TLateDE_Effective_w_wa
     end type TLateDE
 
@@ -51,7 +52,7 @@ module LateDE
             else if (z < this%z3) then
                 w_de = this%w2
             else
-                w_de = this%w3
+                w_de = this%winfty
             end if    
         else if (this%model == 4) then
             !'5bins_w'
@@ -67,7 +68,7 @@ module LateDE
             else if (z < this%z5) then
                 w_de = this%w4
             else
-                w_de = this%w5
+                w_de = this%winfty
             end if     
         else if (this%model == 5) then
             !'10bins_w'
@@ -93,7 +94,7 @@ module LateDE
             else if (z < this%z10) then
                 w_de  = this%w9  
             else
-                w_de = this%w10  
+                w_de = this%winfty  
             end if    
         else
             stop "[Late Fluid DE] Invalid Dark Energy Model"   
@@ -125,7 +126,7 @@ module LateDE
         else if (z < this%z3) then
             grho_de = grho_de_today * this%fac2 * a**(-3 * (1 + this%w2))
         else
-            grho_de = grho_de_today * this%fac3 * a**(-3 * (1 + this%w3))
+            grho_de = grho_de_today * this%fac3 * a**(-3 * (1 + this%winfty))
         end if    
     else if (this%model == 4) then
         ! Binned w model: 5 bins
@@ -141,7 +142,7 @@ module LateDE
         else if (z < this%z5) then
             grho_de = grho_de_today * this%fac4 * a**(-3 * (1 + this%w4))
         else
-            grho_de = grho_de_today * this%fac5 * a**(-3 * (1 + this%w5))
+            grho_de = grho_de_today * this%fac5 * a**(-3 * (1 + this%winfty))
         end if    
     else if (this%model == 5) then
         ! Binned w model: 10 bins
@@ -167,7 +168,7 @@ module LateDE
         else if (z < this%z10) then
             grho_de = grho_de_today * this%fac9 * a**(-3 * (1 + this%w9))
         else
-            grho_de = grho_de_today * this%fac10 * a**(-3 * (1 + this%w10))
+            grho_de = grho_de_today * this%fac10 * a**(-3 * (1 + this%winfty))
         end if    
     else 
         stop "[Late Fluid DE] Invalid Dark Energy Model"
