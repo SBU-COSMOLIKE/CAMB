@@ -48,6 +48,7 @@
     module NonLinear
     use results
     use DarkEnergyInterface
+    use LateDE
     use classes
     use Transfer
     use constants

@@ -200,7 +200,7 @@ module LateDE
             this%fac7 = this%fac6 * (1+this%z7)**(3 * (this%w6 - this%w7))
             this%fac8 = this%fac7 * (1+this%z8)**(3 * (this%w7 - this%w8))
             this%fac9 = this%fac8 * (1+this%z9)**(3 * (this%w8 - this%w9))
-            this%fac10 = this%fac9 * (1+this%z10)**(3 * (this%w9 - this%w10))
+            this%fac10 = this%fac9 * (1+this%z10)**(3 * (this%w9 - this%winfty))
         end if    
     end subroutine TLateDE_Init
 
