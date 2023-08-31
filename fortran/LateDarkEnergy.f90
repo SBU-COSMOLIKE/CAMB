@@ -34,14 +34,12 @@ module LateDE
         real(dl), intent(in) :: a    
         real(dl) :: w_de, z
 
-        w_de = 0
-
         if (this%model == 1) then
             !'w_constant'
             w_de = this%w0
         else if (this%model == 2) then
             !'w0wa'
-            w_de = this%w0 + this%wa*(1._dl - a)
+            w_de = this%w0 + this%w1*(1._dl - a)
         else if (this%model == 3) then
             !'3bins_w'
             z = 1._dl/a - 1._dl
@@ -105,8 +103,7 @@ module LateDE
     function TLateDE_grho_de(this, a) result(grho_de)
     class(TLateDE) :: this
     real(dl), intent(in) :: a
-    real(dl) :: grho_de
-    real(dl) :: w0, wa, z, grho_de_today    
+    real(dl) :: grho_de, z, grho_de_today    
 
     ! Returns 8*pi*G * rho_de, no factor of a^4
     grho_de = 0
@@ -115,7 +112,7 @@ module LateDE
         grho_de = grho_de_today * a**(-3 * (1 + this%w0))
     else if (this%model == 2) then
         ! w0-wa model
-        grho_de = grho_de_today * a**(3 * (1 + this%w0 + this%wa)) * exp(-3 * this%wa * (1 - a))
+        grho_de = grho_de_today * a**(3 * (1 + this%w0 + this%w1)) * exp(-3 * this%w1 * (1 - a))
     else if (this%model == 3) then
         ! Binned w model: 3 bins
         z = 1._dl/a - 1
@@ -227,8 +224,17 @@ module LateDE
         class(TLateDE), intent(inout) :: this
         real(dl), intent(out) :: w, wa
 
-        w = this%w_lam
-        wa = this%wa
+        if (this%model == 1) then
+            !'w_constant'
+            w  = this%w0
+            wa = 0.0_dl
+        else if (this%model == 2) then
+            !'w0wa'
+            w  = this%w0
+            wa = this%w1
+        else
+            stop "[Late Fluid DE] Invalid Dark Energy Model (TLateDE_Effective_w_wa)"
+        endif
     end subroutine TLateDE_Effective_w_wa
 
 end module LateDE
