@@ -11,6 +11,9 @@ module DarkEnergyInterface
         integer :: num_perturb_equations = 0
         !VM BEGINS
         real(dl) :: cs2_lam = 1_dl
+        real(dl) :: w_lam = -1_dl !VM not be used in Casarini except to init the search for effective constant w
+        real(dl) :: wa    = 0._dl !VM not be used in Casarini except to init the search for effective constant w
+        logical  :: no_perturbations = .false.
         !VM ENDS
 
         contains

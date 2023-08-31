@@ -6,10 +6,6 @@ module LateDE
     implicit none
 
     type, extends(TDarkEnergyModel) :: TLateDE
-        real(dl) :: w_lam = -1_dl !VM not be used in Casarini except to init the search for effective constant w
-        real(dl) :: wa    = 0._dl !VM not be used in Casarini except to init the search for effective constant w
-        
-        logical  :: no_perturbations = .false.
         integer  :: model
         real(dl) :: winfty  = -1.0_dl
         real(dl) :: w0, w1, w2, w3, w4, w5, w6, w7, w8, w9

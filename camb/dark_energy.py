@@ -19,9 +19,7 @@ class DarkEnergyModel(F2003Class):
 @fortran_class
 class DarkEnergyPPF(LateDE):
     """
-    Class implementating the w, wa or splined w(a) parameterization in the PPF perturbation approximation
-    (`arXiv:0808.3125 <https://arxiv.org/abs/0808.3125>`_)
-    Use inherited methods to set parameters or interpolation table.
+    VM: CLASS IMPLEMENTS w, w0wa and binw
 
     """
     # cannot declare c_Gamma_ppf directly here as have not defined all fields in DarkEnergyEqnOfState (TCubicSpline)
