@@ -6,7 +6,11 @@ POWERSPECTRUM_FILES ?= InitialPower
 REIONIZATION_FILES ?= reionization
 RECOMBINATION_FILES ?= recfast
 NONLINEAR_FILES     ?= halofit SecondOrderPK
-DARKENERGY_FILES  ?= DarkEnergyFluid DarkEnergyPPF PowellMinimize DarkEnergyQuintessence
+
+#DHFS: BEGINS
+#OBS: Dark_Energy_PPF use Late_Dark_Energy so should compile the latter first, otherwise you get an error of "file not found"
+DARKENERGY_FILES  ?= DarkEnergyFluid LateDarkEnergy DarkEnergyPPF PowellMinimize DarkEnergyQuintessence
+#DHFS: ENDS
 
 BISPECTRUM ?= SeparableBispectrum
 

@@ -6,23 +6,24 @@ module LateDE
     implicit none
 
     type, extends(TDarkEnergyModel) :: TLateDE
-        integer  :: DebugLevel
+        
+        real(dl) :: w_lam = -1_dl !p/rho for the dark energy (an effective value, used e.g. for halofit). DHFS: see DarkEnergyInterface.f90
+        ! real(dl) :: wa = 0._dl !may not be used, just for compatibility with e.g. halofit. DHFS: see DarkEnergyInterface.f90
+        real(dl) :: cs2_lam = 1_dl
+        logical :: no_perturbations = .false.
         integer  :: model
         real(dl) :: w0, wa ! CPL parameters
         real(dl) :: w1, w2, w3, w4, w5, w6, w7, w8, w9, w10
         real(dl) :: z1, z2, z3, z4, z5, z6, z7, z8, z9, z10 ! Binned w
-        real(dl) :: fac1, fac2, fac3, fac4, fac5, fac6, fac7, fac8, fac9, fac10 ! Binned w factors        
-        !comoving sound speed is always exactly 1 for quintessence
-        !(otherwise assumed constant, though this is almost certainly unrealistic)
+        real(dl) :: fac1, fac2, fac3, fac4, fac5, fac6, fac7, fac8, fac9, fac10 ! Binned w factors
 
         contains        
         procedure :: w_de => TLateDE_w_de
         procedure :: grho_de => TLateDE_grho_de
-        procedure :: BackgroundDensityAndPressure => TLateDE_density
         procedure :: Init => TLateDE_Init
-        ! procedure, nopass :: PythonClass => TLateDE_PythonClass
-        ! procedure, nopass :: SelfPointer => TLateDE_SelfPointer
-        ! procedure :: ReadParams => TMultiFluidDE_ReadParams
+        procedure :: ReadParams => TLateDE_ReadParams
+        procedure :: PrintFeedback => TLateDE_PrintFeedback 
+        procedure :: Effective_w_wa => TLateDE_Effective_w_wa
     end type TLateDE
 
     contains
@@ -175,23 +176,6 @@ module LateDE
 
     end function TLateDE_grho_de
 
-    subroutine TLateDE_density(this, grhov, a, grhov_t, w)
-        ! Get grhov_t = 8*pi*G*rho_de*a**2 and (optionally) equation of state at scale factor a
-        class(TLateDE), intent(inout) :: this
-        real(dl), intent(in) :: grhov, a
-        real(dl), intent(out) :: grhov_t
-        real(dl), optional, intent(out) :: w
-
-        if (a > 1e-10) then
-            grhov_t = this%grho_de(a) * a**2
-        else
-            grhov_t = 0
-        end if
-        if (present(w)) then
-            w = this%w_de(a)
-        end if
-    end subroutine TLateDE_density
-
     subroutine TLateDE_Init(this, State)
         use classes
         use results
@@ -222,14 +206,39 @@ module LateDE
         end if    
     end subroutine TLateDE_Init
 
-    ! subroutine TLateDE_ReadParams(this, Ini)
-    !     use IniObjects
-    !     class(TLateDE) :: this
-    !     class(TIniFile), intent(in) :: Ini
+    subroutine TLateDE_ReadParams(this, Ini)
+    !DHFS: copy from DarkEnergyInterface.f90 module - see TDarkEnergyEqnOfState_ReadParams
+        use IniObjects
+        use FileUtils
+        class(TLateDE) :: this
+        class(TIniFile), intent(in) :: Ini
+    end subroutine TLateDE_ReadParams
+    
+    subroutine TLateDE_PrintFeedback(this, FeedbackLevel)
+    !DHFS: copy from DarkEnergyInterface.f90 module - see TDarkEnergyEqnOfState_PrintFeedback
+        class(TLateDE) :: this
+        integer, intent(in) :: FeedbackLevel
 
-    !     call this%TDarkEnergyEqnOfState%ReadParams(Ini)
-    !     this%cs2_lam = Ini%Read_Double('cs2_lam', 1.d0)
-    ! end subroutine TLateDE_ReadParams
+        ! if (FeedbackLevel >0) write(*,'DHFS: what should I write here?')
+    end subroutine TLateDE_PrintFeedback
+
+    subroutine TLateDE_Effective_w_wa(this, w, wa)
+        class(TLateDE), intent(inout) :: this
+        real(dl), intent(out) :: w, wa
+
+        w = this%w_lam
+        wa = this%wa
+    end subroutine TLateDE_Effective_w_wa
+
+end module LateDE
+
+
+
+
+
+!------------------------------------------------------------------
+
+
 
     ! function TLateDE_PythonClass()
     !     character(LEN=:), allocatable :: TLateDE_PythonClass
@@ -247,4 +256,19 @@ module LateDE
     !     P => PType
     ! end subroutine TLateDE_SelfPointer
 
-end module LateDE
+        ! subroutine TLateDE_density(this, grhov, a, grhov_t, w)
+    !     ! Get grhov_t = 8*pi*G*rho_de*a**2 and (optionally) equation of state at scale factor a
+    !     class(TLateDE), intent(inout) :: this
+    !     real(dl), intent(in) :: grhov, a
+    !     real(dl), intent(out) :: grhov_t
+    !     real(dl), optional, intent(out) :: w
+
+    !     if (a > 1e-10) then
+    !         grhov_t = this%grho_de(a) * a**2
+    !     else
+    !         grhov_t = 0
+    !     end if
+    !     if (present(w)) then
+    !         w = this%w_de(a)
+    !     end if
+    ! end subroutine TLateDE_density
