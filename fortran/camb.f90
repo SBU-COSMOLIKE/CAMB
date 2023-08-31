@@ -8,7 +8,10 @@
     use Reionization
     use Recombination
     use lensing
-    use DarkEnergyFluid
+    !VM BEGINS
+    !use DarkEnergyFluid
+    use DarkEnergyPPF
+    !VM ENDS
     implicit none
     contains
 
@@ -213,7 +216,10 @@
     P%Nu_mass_fractions=0
 
     allocate(THalofit::P%NonLinearModel)
-    allocate(TDarkEnergyFluid::P%DarkEnergy)
+    !VM BEGINS
+    !allocate(TDarkEnergyFluid::P%DarkEnergy)
+    allocate(TDarkEnergyPPF::P%DarkEnergy)
+    !VM ENDS
     allocate(TInitialPowerLaw::P%InitPower)
     allocate(TRecfast::P%Recomb)
     allocate(TTanhReionization::P%Reion)
@@ -238,9 +244,14 @@
 
     logical function CAMB_ReadParams(P, Ini, ErrMsg)
     use NonLinear
-    use DarkEnergyFluid
+    !VM BEGINS
+    !use DarkEnergyFluid
+    !VM ENDS
     use DarkEnergyPPF
-    use Quintessence
+    !VM BEGINS
+    !use Quintessence
+    use constants
+    !VM ENDS
     use results
 #ifdef COSMOREC
     use CosmoRec
@@ -255,7 +266,7 @@
     integer i, status
     real(dl) nmassive
     character(LEN=*), intent(inout) :: ErrMsg
-    character(LEN=:), allocatable :: NumStr, S, DarkEneryModel, RecombinationModel
+    character(LEN=:), allocatable :: NumStr, S, DarkEnergyModel, RecombinationModel
     logical :: DoCounts
 
     CAMB_ReadParams = .false.
@@ -401,18 +412,13 @@
     endif
 
     !  Read initial parameters.
-    DarkEneryModel = UpperCase(Ini%Read_String_Default('dark_energy_model', 'fluid'))
+    DarkEnergyModel = UpperCase(Ini%Read_String_Default('dark_energy_model', 'PPF'))
     if (allocated(P%DarkEnergy)) deallocate(P%DarkEnergy)
-    if (DarkEneryModel == 'FLUID') then
-        allocate (TDarkEnergyFluid::P%DarkEnergy)
-    else if (DarkEneryModel == 'PPF') then
+
+    if (DarkEnergyModel == 'PPF') then
         allocate (TDarkEnergyPPF::P%DarkEnergy)
-    else if (DarkEneryModel == 'AXIONEFFECTIVEFLUID') then
-        allocate (TAxionEffectiveFluid::P%DarkEnergy)
-    else if (DarkEneryModel == 'EARLYQUINTESSENCE') then
-        allocate (TEarlyQuintessence::P%DarkEnergy)
     else
-        ErrMsg = 'Unknown dark energy model: '//trim(DarkEneryModel)
+        ErrMsg = 'Unknown dark energy model: '//trim(DarkEnergyModel)
         return
     end if
     call P%DarkEnergy%ReadParams(Ini)

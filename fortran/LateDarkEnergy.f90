@@ -11,7 +11,6 @@ module LateDE
         
         logical  :: no_perturbations = .false.
         integer  :: model
-        real(dl) :: cs2_lam = 1_dl
         real(dl) :: winfty  = -1.0_dl
         real(dl) :: w0, w1, w2, w3, w4, w5, w6, w7, w8, w9
         real(dl) :: z1, z2, z3, z4, z5, z6, z7, z8, z9, z10 ! Binned w
@@ -23,8 +22,8 @@ module LateDE
         procedure :: Init => TLateDE_Init
         procedure :: ReadParams => TLateDE_ReadParams
         procedure :: PrintFeedback => TLateDE_PrintFeedback
-        ! TODO - investigate if this function (Effective_w_wa) is used on Halofit Casarini 
-        procedure :: Effective_w_wa => TLateDE_Effective_w_wa
+        procedure :: Effective_w_wa => TLateDE_Effective_w_wa   !VM: wont be called with CASARINI (our mod)
+        procedure, nopass :: PythonClass => TLateDE_PythonClass
     end type TLateDE
 
     contains
@@ -237,7 +236,15 @@ module LateDE
         endif
     end subroutine TLateDE_Effective_w_wa
 
+    function TLateDE_PythonClass()
+        character(LEN=:), allocatable :: TLateDE_PythonClass
+
+        TLateDE_PythonClass = 'LateDE'
+    end function TLateDE_PythonClass
+
 end module LateDE
+
+
 
 
 
