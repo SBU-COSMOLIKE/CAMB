@@ -7,7 +7,7 @@ module LateDE
 
     type, extends(TDarkEnergyModel) :: TLateDE
         integer  :: model
-        real(dl) :: winfty  = -1.0_dl
+        real(dl) :: winfty = -1.0_dl
         real(dl) :: w0, w1, w2, w3, w4, w5, w6, w7, w8, w9
         real(dl) :: z1, z2, z3, z4, z5, z6, z7, z8, z9, z10 ! Binned w
         real(dl) :: fac1, fac2, fac3, fac4, fac5, fac6, fac7, fac8, fac9, fac10 ! Binned w factors
@@ -91,82 +91,79 @@ module LateDE
             end if    
         else
             stop "[Late Fluid DE] Invalid Dark Energy Model"   
-        end if                              
-
+        end if
     end function TLateDE_w_de
 
     function TLateDE_grho_de(this, a) result(grho_de)
-    class(TLateDE) :: this
-    real(dl), intent(in) :: a
-    real(dl) :: grho_de, z, grho_de_today    
+        class(TLateDE) :: this
+        real(dl), intent(in) :: a
+        real(dl) :: grho_de, z, grho_de_today    
 
-    ! Returns 8*pi*G * rho_de, no factor of a^4
-    grho_de = 0
-    if (this%model == 1) then
-        !w = constant model
-        grho_de = grho_de_today * a**(-3 * (1 + this%w0))
-    else if (this%model == 2) then
-        ! w0-wa model
-        grho_de = grho_de_today * a**(3 * (1 + this%w0 + this%w1)) * exp(-3 * this%w1 * (1 - a))
-    else if (this%model == 3) then
-        ! Binned w model: 3 bins
-        z = 1._dl/a - 1
-        if (z < this%z1) then
+        ! Returns 8*pi*G * rho_de, no factor of a^4
+        grho_de = 0
+        if (this%model == 1) then
+            !w = constant model
             grho_de = grho_de_today * a**(-3 * (1 + this%w0))
-        else if (a < this%z2) then
-            grho_de = grho_de_today * this%fac1 * a**(-3 * (1 + this%w1))
-        else if (z < this%z3) then
-            grho_de = grho_de_today * this%fac2 * a**(-3 * (1 + this%w2))
-        else
-            grho_de = grho_de_today * this%fac3 * a**(-3 * (1 + this%winfty))
-        end if    
-    else if (this%model == 4) then
-        ! Binned w model: 5 bins
-        z = 1._dl/a - 1
-        if (z < this%z1) then
-            grho_de = grho_de_today * a**(-3 * (1 + this%w0))
-        else if (z < this%z2) then
-            grho_de = grho_de_today * this%fac1 * a**(-3 * (1 + this%w1))
-        else if (z < this%z3) then
-            grho_de = grho_de_today * this%fac2 * a**(-3 * (1 + this%w2))
-        else if (z < this%z4) then
-            grho_de = grho_de_today * this%fac3 * a**(-3 * (1 + this%w3))
-        else if (z < this%z5) then
-            grho_de = grho_de_today * this%fac4 * a**(-3 * (1 + this%w4))
-        else
-            grho_de = grho_de_today * this%fac5 * a**(-3 * (1 + this%winfty))
-        end if    
-    else if (this%model == 5) then
-        ! Binned w model: 10 bins
-        z = 1._dl/a - 1
-        if (z < this%z1) then
-            grho_de = grho_de_today * a**(-3 * (1 + this%w0))
-        else if (z < this%z2) then
-            grho_de = grho_de_today * this%fac1 * a**(-3 * (1 + this%w1))
-        else if (z < this%z3) then
-            grho_de = grho_de_today * this%fac2 * a**(-3 * (1 + this%w2))
-        else if (z < this%z4) then
-            grho_de = grho_de_today * this%fac3 * a**(-3 * (1 + this%w3))
-        else if (z < this%z5) then
-            grho_de = grho_de_today * this%fac4 * a**(-3 * (1 + this%w4))
-        else if (z < this%z6) then
-            grho_de = grho_de_today * this%fac5 * a**(-3 * (1 + this%w5))
-        else if (z < this%z7) then
-            grho_de = grho_de_today * this%fac6 * a**(-3 * (1 + this%w6))
-        else if (z < this%z8) then
-            grho_de = grho_de_today * this%fac7 * a**(-3 * (1 + this%w7))
-        else if (z < this%z9) then
-            grho_de = grho_de_today * this%fac8 * a**(-3 * (1 + this%w8)) 
-        else if (z < this%z10) then
-            grho_de = grho_de_today * this%fac9 * a**(-3 * (1 + this%w9))
-        else
-            grho_de = grho_de_today * this%fac10 * a**(-3 * (1 + this%winfty))
-        end if    
-    else 
-        stop "[Late Fluid DE] Invalid Dark Energy Model"
-
-    end if    
-
+        else if (this%model == 2) then
+            ! w0-wa model
+            grho_de = grho_de_today * a**(3 * (1 + this%w0 + this%w1)) * exp(-3 * this%w1 * (1 - a))
+        else if (this%model == 3) then
+            ! Binned w model: 3 bins
+            z = 1._dl/a - 1
+            if (z < this%z1) then
+                grho_de = grho_de_today * a**(-3 * (1 + this%w0))
+            else if (a < this%z2) then
+                grho_de = grho_de_today * this%fac1 * a**(-3 * (1 + this%w1))
+            else if (z < this%z3) then
+                grho_de = grho_de_today * this%fac2 * a**(-3 * (1 + this%w2))
+            else
+                grho_de = grho_de_today * this%fac3 * a**(-3 * (1 + this%z3))
+            end if    
+        else if (this%model == 4) then
+            ! Binned w model: 5 bins
+            z = 1._dl/a - 1
+            if (z < this%z1) then
+                grho_de = grho_de_today * a**(-3 * (1 + this%w0))
+            else if (z < this%z2) then
+                grho_de = grho_de_today * this%fac1 * a**(-3 * (1 + this%w1))
+            else if (z < this%z3) then
+                grho_de = grho_de_today * this%fac2 * a**(-3 * (1 + this%w2))
+            else if (z < this%z4) then
+                grho_de = grho_de_today * this%fac3 * a**(-3 * (1 + this%w3))
+            else if (z < this%z5) then
+                grho_de = grho_de_today * this%fac4 * a**(-3 * (1 + this%w4))
+            else
+                grho_de = grho_de_today * this%fac5 * a**(-3 * (1 + this%z5))
+            end if    
+        else if (this%model == 5) then
+            ! Binned w model: 10 bins
+            z = 1._dl/a - 1
+            if (z < this%z1) then
+                grho_de = grho_de_today * a**(-3 * (1 + this%w0))
+            else if (z < this%z2) then
+                grho_de = grho_de_today * this%fac1 * a**(-3 * (1 + this%w1))
+            else if (z < this%z3) then
+                grho_de = grho_de_today * this%fac2 * a**(-3 * (1 + this%w2))
+            else if (z < this%z4) then
+                grho_de = grho_de_today * this%fac3 * a**(-3 * (1 + this%w3))
+            else if (z < this%z5) then
+                grho_de = grho_de_today * this%fac4 * a**(-3 * (1 + this%w4))
+            else if (z < this%z6) then
+                grho_de = grho_de_today * this%fac5 * a**(-3 * (1 + this%w5))
+            else if (z < this%z7) then
+                grho_de = grho_de_today * this%fac6 * a**(-3 * (1 + this%w6))
+            else if (z < this%z8) then
+                grho_de = grho_de_today * this%fac7 * a**(-3 * (1 + this%w7))
+            else if (z < this%z9) then
+                grho_de = grho_de_today * this%fac8 * a**(-3 * (1 + this%w8)) 
+            else if (z < this%z10) then
+                grho_de = grho_de_today * this%fac9 * a**(-3 * (1 + this%w9))
+            else
+                grho_de = grho_de_today * this%fac10 * a**(-3 * (1 + this%z10))
+            end if    
+        else 
+            stop "[Late Fluid DE] Invalid Dark Energy Model"
+        end if
     end function TLateDE_grho_de
 
     subroutine TLateDE_Init(this, State)
@@ -195,7 +192,7 @@ module LateDE
             this%fac7 = this%fac6 * (1+this%z7)**(3 * (this%w6 - this%w7))
             this%fac8 = this%fac7 * (1+this%z8)**(3 * (this%w7 - this%w8))
             this%fac9 = this%fac8 * (1+this%z9)**(3 * (this%w8 - this%w9))
-            this%fac10 = this%fac9 * (1+this%z10)**(3 * (this%w9 - this%winfty))
+            this%fac10 = this%fac9 * (1+this%z10)**(3 * (this%w9 - this%z10))
         end if    
     end subroutine TLateDE_Init
 
@@ -240,21 +237,7 @@ module LateDE
 
 end module LateDE
 
-
-
-
-
-
-
 !------------------------------------------------------------------
-
-
-
-    ! function TLateDE_PythonClass()
-    !     character(LEN=:), allocatable :: TLateDE_PythonClass
-
-    !     TLateDE_PythonClass = 'LateDE'
-    ! end function TLateDE_PythonClass
 
     ! subroutine TLateDE_SelfPointer(cptr,P)
     !     use iso_c_binding

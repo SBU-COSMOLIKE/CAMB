@@ -92,7 +92,6 @@ module DarkEnergyInterface
         wa = 0
     end subroutine Effective_w_wa
 
-
     subroutine PerturbedStressEnergy(this, dgrhoe, dgqe, &
         a, dgq, dgrho, grho, grhov_t, w, gpres_noDE, etak, adotoa, k, kf1, ay, ayprime, w_ix)
         class(TDarkEnergyModel), intent(inout) :: this
@@ -105,7 +104,6 @@ module DarkEnergyInterface
         dgrhoe=0
         dgqe=0
     end subroutine PerturbedStressEnergy
-
 
     function diff_rhopi_Add_Term(this, dgrhoe, dgqe,grho, gpres, w, grhok, adotoa, &
         Kf1, k, grhov_t, z, k2, yprime, y, w_ix) result(ppiedot)
