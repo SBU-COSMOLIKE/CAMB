@@ -25,7 +25,7 @@ from .model import CAMBparams, TransferParams
 from .results import CAMBdata, MatterTransferData, ClTransferData
 from .reionization import TanhReionization
 from .nonlinear import Halofit
-from .dark_energy import DarkEnergyFluid, DarkEnergyPPF
+from .dark_energy import DarkEnergyPPF
 from .initialpower import InitialPowerLaw, SplinedInitialPower
 from .mathutils import threej
 from ._config import config

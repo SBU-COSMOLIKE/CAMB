@@ -8,7 +8,7 @@ from . import recombination as recomb
 from . import constants
 from .initialpower import InitialPower, SplinedInitialPower
 from .nonlinear import NonLinearModel
-from .dark_energy import DarkEnergyModel, DarkEnergyEqnOfState
+from .dark_energy import DarkEnergyModel
 from .recombination import RecombinationModel
 from .sources import SourceWindow
 from . import bbn
