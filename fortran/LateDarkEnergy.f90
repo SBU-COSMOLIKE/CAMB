@@ -20,6 +20,7 @@ module LateDE
         procedure :: PrintFeedback => TLateDE_PrintFeedback
         procedure :: Effective_w_wa => TLateDE_Effective_w_wa   !VM: wont be called with CASARINI (our mod)
         procedure, nopass :: PythonClass => TLateDE_PythonClass
+        procedure, nopass :: SelfPointer => TLateDE_SelfPointer
     end type TLateDE
 
     contains
@@ -235,19 +236,19 @@ module LateDE
         TLateDE_PythonClass = 'LateDE'
     end function TLateDE_PythonClass
 
+    subroutine TLateDE_SelfPointer(cptr,P)
+        use iso_c_binding
+        Type(c_ptr) :: cptr
+        Type (TLateDE), pointer :: PType
+        class (TPythonInterfacedClass), pointer :: P
+
+        call c_f_pointer(cptr, PType)
+        P => PType
+    end subroutine TLateDE_SelfPointer
+
 end module LateDE
 
 !------------------------------------------------------------------
-
-    ! subroutine TLateDE_SelfPointer(cptr,P)
-    !     use iso_c_binding
-    !     Type(c_ptr) :: cptr
-    !     Type (TLateDE), pointer :: PType
-    !     class (TPythonInterfacedClass), pointer :: P
-
-    !     call c_f_pointer(cptr, PType)
-    !     P => PType
-    ! end subroutine TLateDE_SelfPointer
 
         ! subroutine TLateDE_density(this, grhov, a, grhov_t, w)
     !     ! Get grhov_t = 8*pi*G*rho_de*a**2 and (optionally) equation of state at scale factor a

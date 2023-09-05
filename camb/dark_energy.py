@@ -14,13 +14,14 @@ class DarkEnergyModel(F2003Class):
     def validate_params(self):
         return True
 
+@fortran_class
 class LateDE(DarkEnergyModel):
     """
     DHFS: Abstract base class for models using w and wa parameterization with use w(a) = w + (1-a)*wa parameterization,
     or bin w.
     """
 
-    _fortran_class_module_ = 'DarkEnergyInterface'
+    _fortran_class_module_ = 'LateDE'
     _fortran_class_name_ = 'TLateDE'
 
     _fields_ = [
