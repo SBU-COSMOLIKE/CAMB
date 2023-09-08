@@ -5,10 +5,13 @@ module LateDE
     use classes
     implicit none
 
+    private
+    real(dl) :: grho_de_today
+
     type, extends(TDarkEnergyModel) :: TLateDE
         integer  :: model
-        real(dl) :: winfty = -1.0_dl
-        real(dl) :: w0, w1, w2, w3, w4, w5, w6, w7, w8, w9
+        ! real(dl) :: winfty = -1.0_dl
+        real(dl) :: w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10
         real(dl) :: z1, z2, z3, z4, z5, z6, z7, z8, z9, z10 ! Binned w
         real(dl) :: fac1, fac2, fac3, fac4, fac5, fac6, fac7, fac8, fac9, fac10 ! Binned w factors
 
@@ -22,6 +25,8 @@ module LateDE
         procedure, nopass :: PythonClass => TLateDE_PythonClass
         procedure, nopass :: SelfPointer => TLateDE_SelfPointer
     end type TLateDE
+
+    public TLateDE
 
     contains
 
@@ -46,7 +51,7 @@ module LateDE
             else if (z < this%z3) then
                 w_de = this%w2
             else
-                w_de = this%winfty
+                w_de = this%w3
             end if    
         else if (this%model == 4) then
             !'5bins_w'
@@ -62,7 +67,7 @@ module LateDE
             else if (z < this%z5) then
                 w_de = this%w4
             else
-                w_de = this%winfty
+                w_de = this%w5
             end if     
         else if (this%model == 5) then
             !'10bins_w'
@@ -88,7 +93,7 @@ module LateDE
             else if (z < this%z10) then
                 w_de  = this%w9  
             else
-                w_de = this%winfty  
+                w_de = this%w10  
             end if    
         else
             stop "[Late Fluid DE] Invalid Dark Energy Model"   
@@ -194,7 +199,12 @@ module LateDE
             this%fac8 = this%fac7 * (1+this%z8)**(3 * (this%w7 - this%w8))
             this%fac9 = this%fac8 * (1+this%z9)**(3 * (this%w8 - this%w9))
             this%fac10 = this%fac9 * (1+this%z10)**(3 * (this%w9 - this%z10))
-        end if    
+        end if  
+
+        select type (State)
+            type is (CAMBdata)
+            grho_de_today = State%grhov
+        end select        
     end subroutine TLateDE_Init
 
     subroutine TLateDE_ReadParams(this, Ini)

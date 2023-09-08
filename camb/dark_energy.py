@@ -59,7 +59,7 @@ class LateDE(DarkEnergyModel):
         ("fac7", c_double, "Bin w internal parameter: integrated boundary condition between the 7st and 2nd bin"),
         ("fac8", c_double, "Bin w internal parameter: integrated boundary condition between the 8st and 2nd bin"),
         ("fac9", c_double, "Bin w internal parameter: integrated boundary condition between the 9st and 2nd bin"),
-        ("fac10", c_double, "Bin w internal parameter: integrated boundary condition between the 1st and 2nd bin"),
+        ("fac10", c_double, "Bin w internal parameter: integrated boundary condition between the 1st and 2nd bin")
     ]
 
     def set_params(self, model,
@@ -69,7 +69,6 @@ class LateDE(DarkEnergyModel):
         Joao Set dark energy fluid parameters
         Diogo Adjusting for late DE only
         """
-
         self.model = model
         self.w0 = w0
         self.w1 = w1
