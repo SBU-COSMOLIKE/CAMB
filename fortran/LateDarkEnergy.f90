@@ -10,11 +10,9 @@ module LateDE
 
     type, extends(TDarkEnergyModel) :: TLateDE
         integer  :: model
-        ! real(dl) :: winfty = -1.0_dl
-        real(dl) :: w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10
-        real(dl) :: z1, z2, z3, z4, z5, z6, z7, z8, z9, z10 ! Binned w
-        real(dl) :: fac1, fac2, fac3, fac4, fac5, fac6, fac7, fac8, fac9, fac10 ! Binned w factors
-
+        real(dl) :: w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10
+        real(dl) :: z1,z2,z3,z4,z5,z6,z7,z8,z9,z10
+        real(dl) :: fac1,fac2,fac3,fac4,fac5,fac6,fac7,fac8,fac9,fac10
         contains        
         procedure :: w_de => TLateDE_w_de
         procedure :: grho_de => TLateDE_grho_de
@@ -36,6 +34,8 @@ module LateDE
         real(dl), intent(in) :: a    
         real(dl) :: w_de, z
         write(*,*)'1 model: ', this%model
+        
+        w_de = 0
 
         if (this%model == 1) then
             !'w_constant'
@@ -180,6 +180,7 @@ module LateDE
         use results
         class(TLateDE), intent(inout) :: this
         class(TCAMBdata), intent(in), target :: State
+
         write(*,*)'Model (It should be 1): ', this%model
         write(*,*)'----------------------------'
         write(*,*)'Eqn of State (w0, w1, ..., w10): '
@@ -206,13 +207,6 @@ module LateDE
         write(*,*) 'z8', this%z8
         write(*,*) 'z9', this%z9
         write(*,*) 'z10', this%z10
-
-        ! this%is_cosmological_constant = .false.
-        ! this%num_perturb_equations = 2 * 1
-        
-        ! if (this%model == 2 .or. this%model == 3 .or. this%model == 4 .or. this%model == 5) then
-        !     this%num_perturb_equations = this%num_perturb_equations - 1 ! PPF only has one equation
-        ! end if
 
         if (this%model == 3) then
             this%fac1 = (1+this%z1)**(3 * (this%w0 - this%w1))
