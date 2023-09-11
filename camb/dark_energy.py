@@ -63,34 +63,31 @@ class LateDE(DarkEnergyModel):
     ]
 
     def set_params(self, model,
-                   w0 = -1, w1 = -1, w2 = -1, w3 = -1, w4 = -1, w5 = -1, w6 = -1, w7 = -1, w8 = -1, w9 = -1, w10 = -1,
-                   z1 = 0.7, z2 = 1.4, z3 = 2.1, z4 = 2.8, z5 = 3.5, z6 = 4.2, z7 = 4.9, z8 = 5.6, z9 = 6.3, z10 = 7.0):
-        """
-        Joao Set dark energy fluid parameters
-        Diogo Adjusting for late DE only
-        """
-        self.model = model
-        self.w0 = w0
-        self.w1 = w1
-        self.w2 = w2
-        self.w3 = w3
-        self.w4 = w4
-        self.w5 = w5
-        self.w6 = w6
-        self.w7 = w7
-        self.w8 = w8
-        self.w9 = w9
-        self.w10 = w10
-        self.z1 = z1
-        self.z2 = z2
-        self.z3 = z3
-        self.z4 = z4
-        self.z5 = z5
-        self.z6 = z6
-        self.z7 = z7
-        self.z8 = z8
-        self.z9 = z9
-        self.z10 = z10
+                     w0=-1, w1=-1, w2=-1, w3=-1, w4=-1, w5=-1, w6=-1, w7=-1, w8=-1, w9=-1, w10=-1,
+                     z1=1, z2=2, z3=3, z4=4, z5=5, z6=6, z7=7, z8=8, z9=9, z10=10):
+
+        self.model=model 
+        self.w0=w0 
+        self.w1=w1 
+        self.w2=w2
+        self.w3=w3
+        self.w4=w4
+        self.w5=w5
+        self.w6=w6
+        self.w7=w7
+        self.w8=w8
+        self.w9=w9
+        self.w10=w10
+        self.z1=z1
+        self.z2=z2 
+        self.z3=z3
+        self.z4=z4 
+        self.z5=z5
+        self.z6=z6 
+        self.z7=z7
+        self.z8=z8
+        self.z9=z9
+        self.z10=z10
 
 @fortran_class
 class DarkEnergyPPF(LateDE):
