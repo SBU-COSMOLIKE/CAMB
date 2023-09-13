@@ -19,7 +19,7 @@ module LateDE
         procedure :: Init => TLateDE_Init
         procedure :: ReadParams => TLateDE_ReadParams
         procedure :: PrintFeedback => TLateDE_PrintFeedback
-        ! procedure :: BackgroundDensityAndPressure => TLateDE_density ! DHFS: Do I Need This ?
+        procedure :: BackgroundDensityAndPressure => TLateDE_density ! DHFS: Do I Need This ? If yes why, if not why 
         procedure :: Effective_w_wa => TLateDE_Effective_w_wa   !VM: wont be called with CASARINI (our mod)
         procedure, nopass :: PythonClass => TLateDE_PythonClass
         procedure, nopass :: SelfPointer => TLateDE_SelfPointer
@@ -33,7 +33,6 @@ module LateDE
         class(TLateDE) :: this
         real(dl), intent(in) :: a    
         real(dl) :: w_de, z
-        write(*,*)'1 model: ', this%model
         
         w_de = 0
 
@@ -105,11 +104,11 @@ module LateDE
     function TLateDE_grho_de(this, a) result(grho_de)
         class(TLateDE) :: this
         real(dl), intent(in) :: a
-        real(dl) :: grho_de, z, grho_de_today    
-        write(*,*)'2 model: ', this%model
+        real(dl) :: grho_de, z    
 
         ! Returns 8*pi*G * rho_de, no factor of a^4
         grho_de = 0
+
         if (this%model == 1) then
             !w = constant model
             grho_de = grho_de_today * a**(-3 * (1 + this%w0))
@@ -181,33 +180,6 @@ module LateDE
         class(TLateDE), intent(inout) :: this
         class(TCAMBdata), intent(in), target :: State
 
-        write(*,*)'Model (It should be 1): ', this%model
-        write(*,*)'----------------------------'
-        write(*,*)'Eqn of State (w0, w1, ..., w10): '
-        write(*,*) 'w0', this%w0
-        write(*,*) 'w1', this%w1
-        write(*,*) 'w2', this%w2
-        write(*,*) 'w3', this%w3
-        write(*,*) 'w4', this%w4
-        write(*,*) 'w5', this%w5
-        write(*,*) 'w6', this%w6
-        write(*,*) 'w7', this%w7
-        write(*,*) 'w8', this%w8
-        write(*,*) 'w9', this%w9
-        write(*,*) 'w10', this%w10
-        write(*,*)'----------------------------'
-        write(*,*)'Redshift (z1, z2 ,..., z10) : '
-        write(*,*) 'z1', this%z1
-        write(*,*) 'z2', this%z2
-        write(*,*) 'z3', this%z3
-        write(*,*) 'z4', this%z4
-        write(*,*) 'z5', this%z5
-        write(*,*) 'z6', this%z6
-        write(*,*) 'z7', this%z7
-        write(*,*) 'z8', this%z8
-        write(*,*) 'z9', this%z9
-        write(*,*) 'z10', this%z10
-
         if (this%model == 3) then
             this%fac1 = (1+this%z1)**(3 * (this%w0 - this%w1))
             this%fac2 = this%fac1 * (1+this%z2)**(3 * (this%w1 - this%w2))
@@ -231,10 +203,10 @@ module LateDE
             this%fac10 = this%fac9 * (1+this%z10)**(3 * (this%w9 - this%z10))
         end if  
 
-        ! select type (State)
-        !     type is (CAMBdata)
-        !     grho_de_today = State%grhov
-        ! end select        
+        select type (State)
+            type is (CAMBdata)
+            grho_de_today = State%grhov
+        end select        
     end subroutine TLateDE_Init
 
     subroutine TLateDE_ReadParams(this, Ini)
@@ -243,14 +215,12 @@ module LateDE
         use FileUtils
         class(TLateDE) :: this
         class(TIniFile), intent(in) :: Ini
-        write(*,*)'4 model: ', this%model
     end subroutine TLateDE_ReadParams
     
     subroutine TLateDE_PrintFeedback(this, FeedbackLevel)
     !DHFS: copy from DarkEnergyInterface.f90 module - see TDarkEnergyEqnOfState_PrintFeedback
         class(TLateDE) :: this
         integer, intent(in) :: FeedbackLevel
-        write(*,*)'5 model: ', this%model
 
         ! if (FeedbackLevel >0) write(*,'DHFS: what should I write here?')
     end subroutine TLateDE_PrintFeedback
@@ -258,7 +228,6 @@ module LateDE
     subroutine TLateDE_Effective_w_wa(this, w, wa)
         class(TLateDE), intent(inout) :: this
         real(dl), intent(out) :: w, wa
-        write(*,*)'6 model: ', this%model
 
         if (this%model == 1) then
             !'w_constant'
@@ -289,22 +258,21 @@ module LateDE
         P => PType
     end subroutine TLateDE_SelfPointer
 
-    ! subroutine TLateDE_density(this, grhov, a, grhov_t, w)
-    !     ! Get grhov_t = 8*pi*G*rho_de*a**2 and (optionally) equation of state at scale factor a
-    !     class(TLateDE), intent(inout) :: this
-    !     real(dl), intent(in) :: grhov, a
-    !     real(dl), intent(out) :: grhov_t
-    !     real(dl), optional, intent(out) :: w
-    !     write(*,*)'7 model: ', this%model
+    subroutine TLateDE_density(this, grhov, a, grhov_t, w)
+        ! Get grhov_t = 8*pi*G*rho_de*a**2 and (optionally) equation of state at scale factor a
+        class(TLateDE), intent(inout) :: this
+        real(dl), intent(in) :: grhov, a
+        real(dl), intent(out) :: grhov_t
+        real(dl), optional, intent(out) :: w
 
-    !     if (a > 1e-10) then
-    !         grhov_t = this%grho_de(a) * a**2
-    !     else
-    !         grhov_t = 0
-    !     end if
-    !     if (present(w)) then
-    !         w = this%w_de(a)
-    !     end if
-    ! end subroutine TLateDE_density
+        if (a > 1e-10) then
+            grhov_t = this%grho_de(a) * a**2
+        else
+            grhov_t = 0
+        end if
+        if (present(w)) then
+            w = this%w_de(a)
+        end if
+    end subroutine TLateDE_density
 
 end module LateDE

@@ -67,8 +67,8 @@ class LateDE(DarkEnergyModel):
     ]
 
     def set_params(self, model,
-                     w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10,
-                     z1, z2, z3, z4, z5, z6, z7, z8, z9, z10):
+                     w0=-1, w1=-1, w2=-1, w3=-1, w4=-1, w5=-1, w6=-1, w7=-1, w8=-1, w9=-1, w10=-1,
+                     z1=0, z2=0, z3=0, z4=0, z5=0, z6=0, z7=0, z8=0, z9=0, z10=0):
         self.model=model 
         self.w0=w0 
         self.w1=w1 

@@ -7,7 +7,7 @@ module DarkEnergyInterface
     private
 
     type, extends(TCambComponent) :: TDarkEnergyModel
-        logical :: is_cosmological_constant = .true.
+        logical :: is_cosmological_constant = .false.
         integer :: num_perturb_equations = 0
         !VM BEGINS
         real(dl) :: cs2_lam = 1_dl
