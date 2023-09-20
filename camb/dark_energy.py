@@ -10,13 +10,13 @@ class DarkEnergyModel(F2003Class):
     _fields_ = [
         ("__is_cosmological_constant", c_bool),
         ("__num_perturb_equations", c_int),
-        ("cs2_lam", c_double),
         ("w_lam", c_double),
         ("wa",c_double),
+        ("cs2_lam", c_double),
         ("no_perturbations",c_bool)]
 
     def validate_params(self):
-        return True
+        return True        
 
 @fortran_class
 class LateDE(DarkEnergyModel):
@@ -67,8 +67,8 @@ class LateDE(DarkEnergyModel):
     ]
 
     def set_params(self, model,
-                     w0=-1, w1=0, w2=0, w3=0, w4=0, w5=0, w6=0, w7=0, w8=0, w9=0, w10=0,
-                     z1=0, z2=0, z3=0, z4=0, z5=0, z6=0, z7=0, z8=0, z9=0, z10=0):
+                     w0=-1, w1=-1, w2=-1, w3=-1, w4=-1, w5=-1, w6=-1, w7=-1, w8=-1, w9=-1, w10=-1,
+                     z1=0.7, z2=1.4, z3=2.1, z4=2.8, z5=3.5, z6=4.2, z7=4.9, z8=5.6, z9=6.3, z10=7.0):
         self.model=model 
         self.w0=w0 
         self.w1=w1 
