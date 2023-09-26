@@ -36,13 +36,13 @@ module LateDE
         w_de = 0
 
         if (this%model == 1) then
-            !'w_constant'
+            ! Constant w
             w_de = this%w0
         else if (this%model == 2) then
-            !'w0wa'
+            ! CPL parametrization w0wa
             w_de = this%w0 + this%w1*(1._dl - a)
         else if (this%model == 3) then
-            !'3bins_w'
+            ! 3 bins w
             z = 1._dl/a - 1._dl
             if (z < this%z1) then
                 w_de = this%w0
@@ -54,7 +54,7 @@ module LateDE
                 w_de = this%w3
             end if    
         else if (this%model == 4) then
-            !'5bins_w'
+            ! 5 bins w
              z = 1._dl/a - 1._dl
             if (z < this%z1) then
                 w_de = this%w0
@@ -70,7 +70,7 @@ module LateDE
                 w_de = this%w5
             end if     
         else if (this%model == 5) then
-            !'10bins_w'
+            ! 10 bins w
              z = 1._dl/a - 1._dl
             if (z < this%z1) then
                 w_de = this%w0
@@ -94,6 +94,16 @@ module LateDE
                 w_de  = this%w9  
             else
                 w_de = this%w10  
+            end if
+        else if (this%model == 6) then
+            ! 2 binned linear w. Linearity is in redshift, not in scale factor
+            z = 1._dl/a - 1._dl
+            if (z < this%z1) then
+                w_de = this%w0 + (this%w1 - this%w0)/this%z1 * z
+            else if (z < this%z2) then
+                w_de = this%w1 + (this%w2 - this%w1)/(this%z2 - this%z1) * (z - this%z1)
+            else
+                w_de = this%w3
             end if    
         else
             stop "[Late Fluid DE] Invalid Dark Energy Model"   
@@ -104,18 +114,20 @@ module LateDE
         class(TLateDE) :: this
         real(dl), intent(in) :: a
         real(dl) :: grho_de, z    
+        real(dl) :: wa0,wa1,wa2
+        real(dl) :: alpha0,alpha1,alpha2
 
         ! Returns 8*pi*G * rho_de, no factor of a^4
         grho_de = 0
 
         if (this%model == 1) then
-            !w = constant model
+            ! w constant
             grho_de = grho_de_today * a**(-3 * (1 + this%w0))
         else if (this%model == 2) then
-            ! w0-wa model
+            ! CPL w0-wa
             grho_de = grho_de_today * a**(-3 * (1 + this%w0 + this%w1)) * exp(-3 * this%w1 * (1 - a))
         else if (this%model == 3) then
-            ! Binned w model: 3 bins
+            ! 3 bins w
             z = 1._dl/a - 1
             if (z < this%z1) then
                 grho_de = grho_de_today * a**(-3 * (1 + this%w0))
@@ -127,7 +139,7 @@ module LateDE
                 grho_de = grho_de_today * this%fac3 * a**(-3 * (1 + this%w3))
             end if    
         else if (this%model == 4) then
-            ! Binned w model: 5 bins
+            ! 5 Bins w
             z = 1._dl/a - 1
             if (z < this%z1) then
                 grho_de = grho_de_today * a**(-3 * (1 + this%w0))
@@ -143,7 +155,7 @@ module LateDE
                 grho_de = grho_de_today * this%fac5 * a**(-3 * (1 + this%w5))
             end if    
         else if (this%model == 5) then
-            ! Binned w model: 10 bins
+            ! 10 Bins w
             z = 1._dl/a - 1
             if (z < this%z1) then
                 grho_de = grho_de_today * a**(-3 * (1 + this%w0))
@@ -168,6 +180,25 @@ module LateDE
             else
                 grho_de = grho_de_today * this%fac10 * a**(-3 * (1 + this%w10))
             end if    
+        else if (this%model == 6) then
+            ! 3 Bins CPL 
+            z = 1._dl/a - 1
+
+            wa0 = (this%w1-this%w0)/(this%z1-0)
+            wa1 = (this%w2-this%w1)/(this%z2-this%z1)
+            wa2 = (this%w3-this%w2)/(this%z3-this%z2)
+
+            alpha0 = 3*(1+this%w0-wa0*(1+0))      
+            alpha1 = 3*(1+this%w1-wa1*(1+this%z1))
+            alpha2 = 3*(1+this%w2-wa2*(1+this%z2))
+
+            if (z < this%z1) then
+                grho_de = grho_de_today*(1+z)**alpha0*exp(3*wa0*z)
+            else if (z < this%z2) then
+                grho_de = grho_de_today*(1+this%z1)**alpha0*exp(3*wa0*this%z1)*((1+z)/(1+this%z1))**alpha1*exp(3*wa1*(z-this%z1))
+            else
+                grho_de = grho_de_today*(1+this%z1)**alpha0*exp(3*wa0*this%z1)*((1+this%z2)/(1+this%z1))**alpha1*exp(3*wa1*(this%z2-this%z1))*((1+z)/(1+this%z2))**alpha2*exp(3*wa2*(z-this%z2))
+            end if                
         else 
             stop "[Late Fluid DE] Invalid Dark Energy Model"
         end if
@@ -200,6 +231,10 @@ module LateDE
             this%fac8 = this%fac7 * (1+this%z8)**(3 * (this%w7 - this%w8))
             this%fac9 = this%fac8 * (1+this%z9)**(3 * (this%w8 - this%w9))
             this%fac10 = this%fac9 * (1+this%z10)**(3 * (this%w9 - this%w10))
+        ! if (this%model == 6) then
+            ! this%fac1 = 
+            ! this%fac2 = 
+            ! this%fac3 = 
         end if  
 
         select type (State)
