@@ -136,7 +136,7 @@ module LateDE
                 w_de = w2
             end if                
         else
-            stop "[Late Fluid DE] Invalid Dark Energy Model"   
+            stop "[Late Fluid DE @TLateDE_w_de] Invalid Dark Energy Model"   
         end if
     end function TLateDE_w_de
 
@@ -304,7 +304,7 @@ module LateDE
                           (((1+z )/(1+z2))**(A02-A12+A22))*exp((A12-A22)*(z -z2)+A22*( z**2-z2**2)/2)          
             end if            
         else 
-            stop "[Late Fluid DE] Invalid Dark Energy Model"
+            stop "[Late Fluid DE @TLateDE_grho_de] Invalid Dark Energy Model"
         end if
     end function TLateDE_grho_de
 
@@ -375,7 +375,7 @@ module LateDE
             w  = this%w0
             wa = this%w1
         else
-            stop "[Late Fluid DE] Invalid Dark Energy Model (TLateDE_Effective_w_wa)"
+            stop "[Late Fluid DE @TLateDE_Effective_w_wa] Invalid Dark Energy Model (TLateDE_Effective_w_wa)"
         endif
     end subroutine TLateDE_Effective_w_wa
 

@@ -588,23 +588,34 @@
         ALLOCATE(p_den(nk,nz), p_num(nk,nz))
     END IF
 
-    !!AM - Assign cosmological parameters for the halo model calculation
-    CALL assign_HM_cosmology(this,State,cosi)
-
-    !Fill growth function table (only needs to be done once)
-    CALL fill_growtab(cosi)
+!VM BEGINS
+!    !!AM - Assign cosmological parameters for the halo model calculation
+!    CALL assign_HM_cosmology(this,State,cosi)
+!
+!    !Fill growth function table (only needs to be done once)
+!    CALL fill_growtab(cosi)
+!VM ENDS
 
     !Loop over redshifts
     DO j=1,nz
 
+!VM BEGINS
+        !VM ADAPT CASARINI PRESCRIPTION TO HMCODE
+        z = CAMB_Pk%Redshifts(j)
+        CALL assign_HM_cosmology2(this, State, cosi, z)
+        write(*,*) z, cosi%w, cosi%wa
+        CALL fill_growtab(cosi)
+!VM ENDS
+
         !Initialise the specific HM_cosmology (fill sigma(R) and P_lin HM_tables)
         !Currently this needs to be done at each z (mainly because of scale-dependent growth with neutrinos)
         !For non-massive-neutrino models this could only be done once, which would speed things up a bit
-        CALL initialise_HM_cosmology(this,j,cosi,CAMB_PK)
+        CALL initialise_HM_cosmology(this, j, cosi, CAMB_PK)
 
+!VM BEGINS
         !Sets the current redshift from the table
-        z=CAMB_Pk%Redshifts(j)
-
+!        z = CAMB_Pk%Redshifts(j)
+!VM ENDS
         IF(this%halofit_version==halofit_mead2020_feedback) THEN
 
             ! Loop over numerator, denominator and HMcode to make feedback response model
@@ -619,7 +630,7 @@
                 if (global_error_flag/=0) return
 
                 !Loop over k values and calculate P(k)
-                !$OMP PARALLEL DO DEFAULT(SHARED), private(k,plin,pfull,p1h,p2h)
+                !$OMP PARALLEL DO DEFAULT(SHARED), private(k, plin, pfull, p1h, p2h)
                 DO i=1,nk
                     k=exp(CAMB_Pk%log_kh(i))
                     plin=p_lin(k,z,0,cosi)
@@ -1089,6 +1100,62 @@
     IF(HM_verbose) WRITE(*,*)
 
     END SUBROUTINE assign_HM_cosmology
+
+    !VM BEGINS
+    SUBROUTINE assign_HM_cosmology2(this, State, cosm, zz)
+    class(THalofit) :: this
+    class(CAMBdata) :: State
+    !Assigns the internal HMcode cosmological parameters
+    TYPE(HM_cosmology) :: cosm
+    real(dl) h2, zz
+
+    associate(CP => State%CP)
+        !Converts CAMB parameters to Meadfit parameters
+        h2 = (CP%H0/100)**2
+        cosm%om_m=(CP%omch2+CP%ombh2+CP%omnuh2)/h2
+        cosm%om_c=CP%omch2/h2
+        cosm%om_b=CP%ombh2/h2
+        cosm%om_nu=CP%omnuh2/h2
+        cosm%om_v=State%omega_de
+        call PKequal(State, zz, cosm%w, cosm%wa)
+        cosm%f_nu=cosm%om_nu/cosm%om_m
+        cosm%h=CP%H0/100
+        cosm%Tcmb=CP%tcmb
+        cosm%Nnu=CP%Num_Nu_massive
+        cosm%ns= CP%InitPower%Effective_ns()
+    end associate
+
+    ! Baryon feedback parameters
+    IF(this%halofit_version==halofit_mead2015 .OR. this%halofit_version==halofit_mead2016)  THEN
+        cosm%A_baryon = this%HMcode_A_baryon
+        cosm%eta_baryon = this%HMcode_eta_baryon
+    ELSE IF(this%halofit_version==halofit_mead2020_feedback) THEN
+        cosm%logT_AGN = this%HMcode_logT_AGN
+    END IF
+
+    !Write out cosmological parameters if necessary
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: Om_m:', cosm%om_m
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: Om_c:', cosm%om_c
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: Om_b:', cosm%om_b
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: Om_nu:', cosm%om_nu
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: Om_v:', cosm%om_v
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: w_0:', cosm%w
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: w_a:', cosm%wa
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: f_nu:', cosm%f_nu
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: n_s:', cosm%ns
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: h:', cosm%h
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: T_CMB [K]:', cosm%Tcmb
+    IF(HM_verbose) WRITE(*,*) 'HM_cosmology: N_nu (massive):', cosm%Nnu
+    IF(HM_verbose .AND. (this%halofit_version==halofit_mead2015 .OR. this%halofit_version==halofit_mead2016)) THEN
+        WRITE(*,*) 'HM_cosmology: A_baryon:', cosm%A_baryon
+        WRITE(*,*) 'HM_cosmology: eta_baryon:', cosm%eta_baryon
+    ELSE IF(HM_verbose .AND. this%halofit_version==halofit_mead2020_feedback) THEN
+        WRITE(*,*) 'HM_cosmology: log10(T_AGN/K):', cosm%logT_AGN
+    END IF
+    IF(HM_verbose) WRITE(*,*)
+
+    END SUBROUTINE assign_HM_cosmology2
+    !VM ENDS
 
     SUBROUTINE initialise_HM_cosmology(this,iz,cosm,CAMB_PK)
     class(THalofit) :: this
@@ -3424,7 +3491,7 @@
 
         State2 = State !Joao Define another state with same cosmological parameters
 
-        w_lam = -0.9                         !VM   INIT TRIAL VALUE
+        w_lam = -0.95                        !VM   INIT TRIAL VALUE
         w_const_type%w0      = w_lam         !Joao initial value
         State2%CP%DarkEnergy = w_const_type  !Joao Change State2 dark energy model to constant w
     
@@ -3432,10 +3499,11 @@
             z_star   = State2%ThermoDerivedParams( derived_zstar )
             tau_star = State2%TimeOfz(z_star)
             dlsb_eq  = State2%TimeOfz(redshift) - tau_star
-            
+ 
             error    = 1.d0 - dlsb_eq/dlsb  ! shooting error
-            !VM TODO: CHECK IF THE TREASHOLD CHANGES THE CHI2
-            if (abs(error) <= 5d-3) exit    ! will only exit the loop when the error hits this treshold
+
+            !VM TODO: DONT MAKE THIS TREASHOLD LARGER THAN 5E-5 (SO THE HIGH REDSHIFT Z~2-3 W IS CORRECT)
+            if (abs(error) <= 2.5d-5) exit    ! will only exit the loop when the error hits this treshold
             
             w_lam                = w_lam*(1 + error)**10.d0
             w_const_type%w0      = w_lam        ! changing the w_const of the model
@@ -3445,7 +3513,9 @@
         w_hf  = w_lam !VM INTENT(OUT) VARIABLES (THE SOLUTION)
         wa_hf = 0._dl !VM INTENT(OUT) VARIABLES (THE SOLUTION)
         
-        write(*,*)'at z = ',real(redshift),' equivalent w_const =', real(w_hf)
+        !VM BEGINS
+        !write(*,*)'at z = ',real(redshift),' equivalent w_const =', real(w_hf)
+        !VM ENDS
     end subroutine PKequal
 
 
