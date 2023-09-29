@@ -147,11 +147,27 @@ module LateDE
         ! real(dl) :: wa0,wa1,wa2
         real(dl) :: alpha0,alpha1,alpha2
 
-        real(dl) :: w0,w1,w2,z0,z1,z2
+        real(dl) :: w0,w1,w2,w3,z0,z1,z2,z3
         real(dl) :: wa0,waa0,wa1,waa1,wa2,waa2
-        real(dl) :: Delta_z1, Delta_w1, Delta_z2, Delta_w2  
+        real(dl) :: Delta_z1, Delta_w1, Delta_z2, Delta_w2, Delta_z3, Delta_w3  
         real(dl) :: A00,A10,A20, A01,A11,A21, A02,A12,A22      
 
+        ! Definitions
+        z0=0
+        z1=this%z1
+        z2=this%z2
+        z3=this%z3 
+        w0=this%w0 
+        w1=this%w1 
+        w2=this%w2
+        w3=this%w3
+
+        Delta_z1 = z1-z0
+        Delta_z2 = z2-z1
+        Delta_z3 = z3-z2
+        Delta_w1 = w1-w0
+        Delta_w2 = w2-w1
+        Delta_w3 = w3-w2 
 
         ! Returns 8*pi*G * rho_de, no factor of a^4
         grho_de = 0
@@ -217,23 +233,29 @@ module LateDE
                 grho_de = grho_de_today * this%fac10 * a**(-3 * (1 + this%w10))
             end if    
         else if (this%model == 6) then
-            ! 2 Bins linear w(z)
+            ! 2 Bins linear w(z)           
+
+            wa0 = Delta_w1/Delta_z1
+            wa1 = Delta_w2/Delta_z2
+            wa2 = Delta_w3/Delta_z3
+
+            alpha0 = 3*(1+w0-wa0*(1+z0))      
+            alpha1 = 3*(1+w1-wa1*(1+z1))
+            alpha2 = 3*(1+w2-wa2*(1+z2))
+            
             z = 1._dl/a - 1
-
-            wa0 = (this%w1-this%w0)/(this%z1-0)
-            wa1 = (this%w2-this%w1)/(this%z2-this%z1)
-            wa2 = (this%w3-this%w2)/(this%z3-this%z2)
-
-            alpha0 = 3*(1+this%w0-wa0*(1+0))      
-            alpha1 = 3*(1+this%w1-wa1*(1+this%z1))
-            alpha2 = 3*(1+this%w2-wa2*(1+this%z2))
-
             if (z < this%z1) then
-                grho_de = grho_de_today*(1+z)**alpha0*exp(3*wa0*z)
+                grho_de = grho_de_today * & 
+                                        ((1+z)/(1+z0))**alpha0*exp(3*wa0*(z-z0))
             else if (z < this%z2) then
-                grho_de = grho_de_today*(1+this%z1)**alpha0*exp(3*wa0*this%z1)*((1+z)/(1+this%z1))**alpha1*exp(3*wa1*(z-this%z1))
+                grho_de = grho_de_today * &
+                                        ((1+z1)/(1+z0))**alpha0*exp(3*wa0*(z1-z0)) * &
+                                        ((1+z )/(1+z1))**alpha1*exp(3*wa1*(z -z1))
             else
-                grho_de = grho_de_today*(1+this%z1)**alpha0*exp(3*wa0*this%z1)*((1+this%z2)/(1+this%z1))**alpha1*exp(3*wa1*(this%z2-this%z1))*((1+z)/(1+this%z2))**alpha2*exp(3*wa2*(z-this%z2))
+                grho_de = grho_de_today * & 
+                                        ((1+z1)/(1+z0))**alpha0*exp(3*wa0*(z1-z0)) * &
+                                        ((1+z2)/(1+z1))**alpha1*exp(3*wa1*(z2-z1)) * &
+                                        ((1+ z)/(1+z2))**alpha2*exp(3*wa2*(z -z2))
             end if 
         else if(this%model == 7) then 
             ! 2 bins quadratic w(z)
@@ -253,30 +275,33 @@ module LateDE
             wa1  =  2._dl*Delta_w2/Delta_z2
             waa1 =  -Delta_w2/Delta_z2**2 
             wa2  = 0
-            waa2 = 0                     
+            waa2 = 0
 
-            A00 = 3*(1+w0-wa0*z0+waa0*z0**2)
-            A00 = 3*(wa0-2*waa0*z0)
-            A00 = 3*waa0
+            A00 = 3._dl*(1+w0-wa0*z0+waa0*z0**2._dl)
+            A10 = 3._dl*(wa0-2*waa0*z0)
+            A20 = 3._dl*waa0
 
-            A01 = 3*(1+w1-wa1*z1+waa1*z1**2)
-            A01 = 3*(wa1-2*waa1*z1)
-            A01 = 3*waa1
+            A01 = 3._dl*(1+w1-wa1*z1+waa1*z1**2._dl)
+            A11 = 3._dl*(wa1-2*waa1*z1)
+            A21 = 3*waa1
 
-            A02 = 3*(1+w2-wa2*z2+waa2*z2**2)
-            A02 = 3*(wa2-2*waa2*z2)
-            A02 = 3*waa2
+            A02 = 3._dl*(1+w2-wa2*z2+waa2*z2**2._dl)
+            A12 = 3._dl*(wa2-2*waa2*z2)
+            A22 = 3._dl*waa2
 
             z = 1._dl/a - 1
             if (z < this%z1) then
-                grho_de = grho_de_today*((1+z)/(1+z0))**(A00-A10+A20)*exp((A10-A20)*(z-z0)+A20*(z**2-z0**0)/2)
+                grho_de = grho_de_today * &
+                          (((1+ z)/(1+z0))**(A00-A10+A20))*exp((A10-A20)*(z -z0)+A20*(z**2-z0**2)/2)
             else if (z < this%z2) then
-                grho_de = grho_de_today*((1+z1)/(1+z0))**(A00-A10+A20)*exp((A10-A20)*(z1-z0)+A20*(z1**2-z0**0)/2) * &
-                          ((1+z)/(1+z1))**(A01-A11+A21)*exp((A11-A21)*(z-z1)+A21*(z**2-z1**0)/2)
+                grho_de = grho_de_today * &
+                          (((1+z1)/(1+z0))**(A00-A10+A20))*exp((A10-A20)*(z1-z0)+A20*(z1**2-z0**2)/2) * &
+                          (((1+z )/(1+z1))**(A01-A11+A21))*exp((A11-A21)*(z -z1)+A21*( z**2-z1**2)/2)
             else
-                grho_de = grho_de_today*((1+z1)/(1+z0))**(A00-A10+A20)*exp((A10-A20)*(z1-z0)+A20*(z1**2-z0**0)/2) * &
-                          ((1+z2)/(1+z1))**(A01-A11+A21)*exp((A11-A21)*(z2-z1)+A21*(z2**2-z1**0)/2) * &
-                          ((1+z)/(1+z2))**(A02-A12+A22)*exp((A12-A22)*(z-z2)+A22*(z**2-z2**0)/2)          
+                grho_de = grho_de_today * & 
+                          (((1+z1)/(1+z0))**(A00-A10+A20))*exp((A10-A20)*(z1-z0)+A20*(z1**2-z0**2)/2) * &
+                          (((1+z2)/(1+z1))**(A01-A11+A21))*exp((A11-A21)*(z2-z1)+A21*(z2**2-z1**2)/2) * &
+                          (((1+z )/(1+z2))**(A02-A12+A22))*exp((A12-A22)*(z -z2)+A22*( z**2-z2**2)/2)          
             end if            
         else 
             stop "[Late Fluid DE] Invalid Dark Energy Model"
