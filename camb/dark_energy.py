@@ -53,17 +53,6 @@ class LateDE(DarkEnergyModel):
         ("z8", c_double, "Bin w parameter: redshift for the 8th bin"),
         ("z9", c_double, "Bin w parameter: redshift for the 9th bin"),
         ("z10", c_double, " Bin w parameter: redshift for the 10th bin"),
-        # Factors to match the integrated boundary condition for energy density
-        ("fac1", c_double, "Bin w internal parameter: integrated boundary condition between the 1st and 2nd bin"),
-        ("fac2", c_double, "Bin w internal parameter: integrated boundary condition between the 2st and 2nd bin"),
-        ("fac3", c_double, "Bin w internal parameter: integrated boundary condition between the 3st and 2nd bin"),
-        ("fac4", c_double, "Bin w internal parameter: integrated boundary condition between the 4st and 2nd bin"),
-        ("fac5", c_double, "Bin w internal parameter: integrated boundary condition between the 5st and 2nd bin"),
-        ("fac6", c_double, "Bin w internal parameter: integrated boundary condition between the 6st and 2nd bin"),
-        ("fac7", c_double, "Bin w internal parameter: integrated boundary condition between the 7st and 2nd bin"),
-        ("fac8", c_double, "Bin w internal parameter: integrated boundary condition between the 8st and 2nd bin"),
-        ("fac9", c_double, "Bin w internal parameter: integrated boundary condition between the 9st and 2nd bin"),
-        ("fac10", c_double, "Bin w internal parameter: integrated boundary condition between the 1st and 2nd bin")
     ]
 
     def set_params(self, model,
@@ -81,6 +70,7 @@ class LateDE(DarkEnergyModel):
         self.w8=w8
         self.w9=w9
         self.w10=w10
+        
         self.z1=z1
         self.z2=z2 
         self.z3=z3

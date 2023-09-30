@@ -3511,7 +3511,7 @@
 
         State2 = State !Joao Define another state with same cosmological parameters
 
-        w_lam = -0.999                       !VM   INIT TRIAL VALUE
+        w_lam = -0.9999                      !VM   INIT TRIAL VALUE
         w_const_type%w0      = w_lam         !Joao initial value
         State2%CP%DarkEnergy = w_const_type  !Joao Change State2 dark energy model to constant w
         i = 0
