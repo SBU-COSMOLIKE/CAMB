@@ -548,6 +548,9 @@
     REAL(dl) :: z, k
     REAL(dl) :: p1h, p2h, pfull, plin
     REAL(dl), ALLOCATABLE :: p_den(:,:), p_num(:,:)
+    !VM BEGINS
+    REAL(dl), ALLOCATABLE :: warr(:)
+    !VM ENDS
     INTEGER :: i, j, ii, nk, nz
     REAL :: t1, t2
     TYPE(HM_cosmology) :: cosi
@@ -582,11 +585,17 @@
     IF(HM_verbose) WRITE(*,*)
 
     !!AM - Translate from CAMB variables to my variables
-    nz=CAMB_PK%num_z
-    nk=CAMB_PK%num_k
+    nz = CAMB_PK%num_z
+    nk = CAMB_PK%num_k
+    !VM BEGINS
+    !VM ENDS
+
     IF(this%halofit_version==halofit_mead2020_feedback) THEN
         ALLOCATE(p_den(nk,nz), p_num(nk,nz))
     END IF
+    !VM BEGINS
+    ALLOCATE(warr(nz))
+    !VM ENDS
 
 !VM BEGINS
 !    !!AM - Assign cosmological parameters for the halo model calculation
@@ -594,16 +603,21 @@
 !
 !    !Fill growth function table (only needs to be done once)
 !    CALL fill_growtab(cosi)
+    !$OMP PARALLEL DO DEFAULT(SHARED), private(j, z)
+    DO j=1,nz
+        z = CAMB_Pk%Redshifts(j)
+        CALL assign_HM_cosmology2(this, State, cosi, z)
+        warr(j) = cosi%w
+    END DO
 !VM ENDS
 
     !Loop over redshifts
     DO j=1,nz
-
 !VM BEGINS
-        !VM ADAPT CASARINI PRESCRIPTION TO HMCODE
+!VM ADAPT CASARINI PRESCRIPTION TO HMCODE
         z = CAMB_Pk%Redshifts(j)
-        CALL assign_HM_cosmology2(this, State, cosi, z)
-        write(*,*) z, cosi%w, cosi%wa
+        CALL assign_HM_cosmology(this, State, cosi, warr(j))
+        !write(*,*) z, cosi%w, cosi%wa
         CALL fill_growtab(cosi)
 !VM ENDS
 
@@ -613,7 +627,7 @@
         CALL initialise_HM_cosmology(this, j, cosi, CAMB_PK)
 
 !VM BEGINS
-        !Sets the current redshift from the table
+!        !Sets the current redshift from the table
 !        z = CAMB_Pk%Redshifts(j)
 !VM ENDS
         IF(this%halofit_version==halofit_mead2020_feedback) THEN
@@ -1047,12 +1061,14 @@
 
     END FUNCTION Tcb_Tcbnu_ratio
 
-    SUBROUTINE assign_HM_cosmology(this,State,cosm)
+    !VM BEGINS
+    SUBROUTINE assign_HM_cosmology(this,State,cosm, w)
+    !VM ENDS
     class(THalofit) :: this
     class(CAMBdata) :: State
     !Assigns the internal HMcode cosmological parameters
     TYPE(HM_cosmology) :: cosm
-    real(dl) h2
+    real(dl) h2, w
 
     associate(CP => State%CP)
         !Converts CAMB parameters to Meadfit parameters
@@ -1062,7 +1078,11 @@
         cosm%om_b=CP%ombh2/h2
         cosm%om_nu=CP%omnuh2/h2
         cosm%om_v=State%omega_de
-        call CP%DarkEnergy%Effective_w_wa(cosm%w, cosm%wa)
+        !VM BEGINS
+        !call CP%DarkEnergy%Effective_w_wa(cosm%w, cosm%wa)
+        cosm%w  = w
+        cosm%wa = 0.0
+        !VM ENDS
         cosm%f_nu=cosm%om_nu/cosm%om_m
         cosm%h=CP%H0/100
         cosm%Tcmb=CP%tcmb
@@ -1117,6 +1137,7 @@
         cosm%om_b=CP%ombh2/h2
         cosm%om_nu=CP%omnuh2/h2
         cosm%om_v=State%omega_de
+        !VM HERE IS WHAT WE CHANGED
         call PKequal(State, zz, cosm%w, cosm%wa)
         cosm%f_nu=cosm%om_nu/cosm%om_m
         cosm%h=CP%H0/100
@@ -3479,11 +3500,10 @@
         Type(TLateDE)  :: w_const_type !Joao initializer for dark energy model with constant w
         real(dl) :: redshift 
         real(dl), INTENT(OUT) :: w_hf, wa_hf
-        real(dl) :: z_star, tau_star, dlsb, dlsb_eq, error, w_lam
+        real(dl) :: dlsb, dlsb_eq, error, w_lam, threshold, step
+        integer i
 
-        z_star   = State%ThermoDerivedParams(derived_zstar)
-        tau_star = State%TimeOfz(z_star)
-        dlsb     = State%TimeOfz(redshift) - tau_star
+        dlsb     = State%TimeOfz(redshift) 
 
         !VM INIT w_const_type as w(z) = constant model
         w_const_type%is_cosmological_constant = .false.
@@ -3491,25 +3511,43 @@
 
         State2 = State !Joao Define another state with same cosmological parameters
 
-        w_lam = -0.95                        !VM   INIT TRIAL VALUE
+        w_lam = -0.999                       !VM   INIT TRIAL VALUE
         w_const_type%w0      = w_lam         !Joao initial value
         State2%CP%DarkEnergy = w_const_type  !Joao Change State2 dark energy model to constant w
-    
+        i = 0
         do
-            z_star   = State2%ThermoDerivedParams( derived_zstar )
-            tau_star = State2%TimeOfz(z_star)
-            dlsb_eq  = State2%TimeOfz(redshift) - tau_star
- 
+            dlsb_eq  = State2%TimeOfz(redshift) 
+            if (redshift > 3.0) then
+                threshold = 1.0e-3
+                step = 50.d0
+           else if (redshift > 1.50) then
+                threshold = 1d-5
+                step = 35.d0
+            else if (redshift > 0.7) then
+                threshold = 2.5d-5
+                step = 20.d0
+            else
+                threshold = 5.0e-5 
+                step = 10.d0
+            endif
+
             error    = 1.d0 - dlsb_eq/dlsb  ! shooting error
 
-            !VM TODO: DONT MAKE THIS TREASHOLD LARGER THAN 5E-5 (SO THE HIGH REDSHIFT Z~2-3 W IS CORRECT)
-            if (abs(error) <= 2.5d-5) exit    ! will only exit the loop when the error hits this treshold
-            
-            w_lam                = w_lam*(1 + error)**10.d0
+            !VM: DONT MAKE THIS TRESHOLD LARGER THAN 5E-5 (SO THE HIGH REDSHIFT Z~2-3 W IS CORRECT)
+            if (abs(error) <= threshold) then
+                exit    ! will only exit the loop when the error hits this treshold
+            endif
+
+            !w_lam               = w_lam*(1 + error)**10.d0
+            w_lam                = w_lam*(1 + step*error)
             w_const_type%w0      = w_lam        ! changing the w_const of the model
             State2%CP%DarkEnergy = w_const_type ! passing the DE model to the state
+            i = i + 1
+            if (i > 100) then
+                !VM avoids spending an absurd amount of time when DE is phantom w < -1 
+                exit
+            endif
         enddo
-
         w_hf  = w_lam !VM INTENT(OUT) VARIABLES (THE SOLUTION)
         wa_hf = 0._dl !VM INTENT(OUT) VARIABLES (THE SOLUTION)
         
