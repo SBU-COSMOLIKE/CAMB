@@ -10,7 +10,7 @@ module LateDE
 
     type, extends(TDarkEnergyModel) :: TLateDE
         integer  :: model
-        real(dl) :: w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10
+        real(dl) :: w0,w1,w2,w3,w4,w5,w6,w7,w8,w9
         real(dl) :: z1,z2,z3,z4,z5,z6,z7,z8,z9,z10
         real(dl) :: z0 = 0.0_dl
         contains
