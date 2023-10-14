@@ -50,15 +50,6 @@ module LateDE
         w_de = 0
         z = 1.0_dl/a - 1.0_dl
 
-        ! Variation in x
-        Delta_z1 = this%z1-0.0_dl
-        Delta_z2 = this%z2-this%z1
-        Delta_z3 = this%z3-this%z2
-        ! Variation in y
-        Delta_w1 = this%w1-this%w0
-        Delta_w2 = this%w2-this%w1
-        Delta_w3 = this%w3-this%w2
-
         if (this%model == 1) then
             ! Constant w
             w_de = this%w0
@@ -118,6 +109,12 @@ module LateDE
             end if
         else if (this%model == 6) then
             ! Linear w(z): 2 bins
+            
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = -1.0_dl-this%w1
+
             wa0 = Delta_w1/Delta_z1
             wa1 = Delta_w2/Delta_z2
             if (z < this%z1) then
@@ -129,6 +126,14 @@ module LateDE
             end if 
         else if (this%model == 7) then
             ! Linear w(z): 3 bins
+
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = -1.0_dl-this%w2 
+
             wa0 = Delta_w1/Delta_z1
             wa1 = Delta_w2/Delta_z2
             wa2 = Delta_w3/Delta_z3
@@ -144,6 +149,12 @@ module LateDE
         else if (this%model == 8) then
             ! Quadratic w(z): 2 bins
             ! Boundary conditions -see my notes-
+
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = -1.0_dl-this%w1
+
             wa0  = 2._dl*(Delta_w1/Delta_z1 - Delta_w2/Delta_z2)
             waa0 = -Delta_w1/Delta_z1**2 + 2._dl*Delta_w2/(Delta_z1*Delta_z2)
             wa1  =  2._dl*Delta_w2/Delta_z2
@@ -159,6 +170,14 @@ module LateDE
         else if (this%model == 9) then
             ! Quadratic w(z): 3 bins
             ! Boundary conditions -see my notes-
+
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = -1.0_dl-this%w2 
+
             wa0  = 2._dl*(Delta_w1/Delta_z1 - Delta_w2/Delta_z2 + Delta_w3/Delta_z3)
             waa0 = -Delta_w1/Delta_z1**2 + (2._dl/Delta_z1)*(Delta_w2/Delta_z2 - Delta_w3/Delta_z3)
             wa1  =  2._dl*(Delta_w2/Delta_z2 - Delta_w3/Delta_z3)
@@ -178,6 +197,12 @@ module LateDE
         else if (this%model == 10) then
             ! Cubic w(z): 2 bins
             ! Boundary conditions -see my notes-
+
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = -1.0_dl-this%w1
+
             wa0   = 3*Delta_w1/Delta_z1 - 3*Delta_w2/Delta_z2 * (2+Delta_z1/Delta_z2)
             waa0  = -3*Delta_w1/Delta_z1**2 + 3*Delta_w2/Delta_z2*(3/Delta_z1 + 2/Delta_z2)
             waaa0 = Delta_w1/Delta_z1**3 - 3*Delta_w2/(Delta_z1*Delta_z2) * (1/Delta_z1 + 1/Delta_z2)
@@ -195,6 +220,14 @@ module LateDE
         else if (this%model == 11) then
             ! Cubic w(z): 3 bins
             ! Boundary conditions -see my notes-
+
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = -1.0_dl-this%w2 
+
             wa0   = 3*Delta_w1/Delta_z1 - 3*(Delta_w2/Delta_z2)*(2 + Delta_z1/Delta_z2) + 3*(Delta_w3/Delta_z3)*(4 + 3*Delta_z1/Delta_z2 + 2*Delta_z1/Delta_z3 + 2*Delta_z2/Delta_z3)
             waa0  = -3*Delta_w1/Delta_z1**2 + 3*(Delta_w2/Delta_z2)*(3/Delta_z1 + 2/Delta_z2) -3*(Delta_w3/Delta_z3)*(6/Delta_z1 + 6/Delta_z2 + 4/Delta_z3 + 3*Delta_z2/(Delta_z1*Delta_z3))
             waaa0 = Delta_w1/Delta_z3**3 - 3*Delta_w2/(Delta_z1*Delta_z2)*(1/Delta_z1 + 1/Delta_z2) + 3*Delta_w3/(Delta_z1*Delta_z3)*(2/Delta_z1 + 3/Delta_z2 + 2/Delta_z3 + Delta_z2/(Delta_z1*Delta_z3))
@@ -224,7 +257,7 @@ module LateDE
                 exit
                 else
                     w_de = -1.0_dl
-                end if           
+                end if
             end do  
 
         else if (this%model == 13) then
@@ -253,6 +286,7 @@ module LateDE
     end function TLateDE_w_de
 
     function TLateDE_grho_de(this, a) result(grho_de)
+        ! Returns 8*pi*G * rho_de, no factor of a^4
         class(TLateDE) :: this
         real(dl), intent(in) :: a
         real(dl) :: grho_de, z    
@@ -265,21 +299,8 @@ module LateDE
         real(dl) :: wa2,waa2,waaa2, A02,A12,A22,A32 ! factors for the 3st bin
         real(dl) :: wa3,waa3,waaa3, A03,A13,A23,A33 ! factors for the 4th bin
 
-        z = 1.0_dl/a - 1.0_dl
-
-        ! Variation in x
-        Delta_z1 = this%z1-this%z0
-        Delta_z2 = this%z2-this%z1
-        Delta_z3 = this%z3-this%z2
-        Delta_z4 = this%z4-this%z3
-        ! Variation in y
-        Delta_w1 = this%w1-this%w0
-        Delta_w2 = this%w2-this%w1
-        Delta_w3 = this%w3-this%w2
-        Delta_w4 = this%w4-this%w3 
-
-        ! Returns 8*pi*G * rho_de, no factor of a^4
         grho_de = 0
+        z = 1.0_dl/a - 1.0_dl
 
         if (this%model == 1) then
             ! w constant
@@ -359,6 +380,11 @@ module LateDE
         else if (this%model == 6) then
             ! Linear w(z): 2 bins
 
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = -1.0_dl-this%w1
+
             wa0 = Delta_w1/Delta_z1
             wa1 = Delta_w2/Delta_z2
 
@@ -377,6 +403,13 @@ module LateDE
             end if 
         else if (this%model == 7) then
             ! Linear w(z): 3 bins
+
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = -1.0_dl-this%w2 
 
             wa0 = Delta_w1/Delta_z1
             wa1 = Delta_w2/Delta_z2
@@ -403,6 +436,11 @@ module LateDE
         else if(this%model == 8) then 
             ! Quadratic w(z): 2 bins  
 
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = -1.0_dl-this%w1
+
             wa0  = 2._dl*(Delta_w1/Delta_z1 - Delta_w2/Delta_z2)
             waa0 = -Delta_w1/Delta_z1**2 + 2._dl*Delta_w2/(Delta_z1*Delta_z2)
             wa1  = 2._dl*Delta_w2/Delta_z2
@@ -428,6 +466,13 @@ module LateDE
             end if 
         else if(this%model == 9) then 
             ! Quadratic w(z): 3 bins  
+
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = -1.0_dl-this%w2 
 
             wa0  = 2._dl*(Delta_w1/Delta_z1 - Delta_w2/Delta_z2 + Delta_w3/Delta_z3)
             waa0 = -Delta_w1/Delta_z1**2 + (2._dl/Delta_z1)*(Delta_w2/Delta_z2 - Delta_w3/Delta_z3)
@@ -464,6 +509,11 @@ module LateDE
         else if(this%model == 10) then 
             ! Cubic w(z): 2 bins
 
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = -1.0_dl-this%w1
+
             wa0   = 3*Delta_w1/Delta_z1 - 3*Delta_w2/Delta_z2 * (2+Delta_z1/Delta_z2)
             waa0  = -3*Delta_w1/Delta_z1**2 + 3*Delta_w2/Delta_z2*(3/Delta_z1 + 2/Delta_z2)
             waaa0 = Delta_w1/Delta_z1**3 - 3*Delta_w2/(Delta_z1*Delta_z2) * (1/Delta_z1 + 1/Delta_z2)
@@ -498,6 +548,13 @@ module LateDE
             end if
         else if(this%model == 11) then 
             ! Cubic w(z): 3 bins
+
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = -1.0_dl-this%w2 
 
             wa0   = 3*Delta_w1/Delta_z1 - 3*(Delta_w2/Delta_z2)*(2 + Delta_z1/Delta_z2) + 3*(Delta_w3/Delta_z3)*(4 + 3*Delta_z1/Delta_z2 + 2*Delta_z1/Delta_z3 + 2*Delta_z2/Delta_z3)
             waa0  = -3*Delta_w1/Delta_z1**2 + 3*(Delta_w2/Delta_z2)*(3/Delta_z1 + 2/Delta_z2) -3*(Delta_w3/Delta_z3)*(6/Delta_z1 + 6/Delta_z2 + 4/Delta_z3 + 3*Delta_z2/(Delta_z1*Delta_z3))
@@ -548,6 +605,11 @@ module LateDE
         else if (this%model == 12) then
             ! Linear w(z): 2 bins  - User defined number of bins
 
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = -1.0_dl-this%w1
+
             wa0 = Delta_w1/Delta_z1
             wa1 = Delta_w2/Delta_z2
 
@@ -568,6 +630,13 @@ module LateDE
             end if    
         else if(this%model == 13) then 
             ! Quadratic w(z): 2 bins - User defined number of bins
+
+            Delta_z1 = this%z1-this%z0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = -1.0_dl-this%w2 
 
             wa0  = 2._dl*(Delta_w1/Delta_z1 - Delta_w2/Delta_z2)
             waa0 = -Delta_w1/Delta_z1**2 + 2._dl*Delta_w2/(Delta_z1*Delta_z2)
