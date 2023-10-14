@@ -8,11 +8,11 @@ module LateDE
     private
     real(dl) :: grho_de_today
     type, extends(TDarkEnergyModel) :: TLateDE
-        integer  :: model
+        integer  :: DEmodel
         integer  :: max_num_of_bins
         real(dl), allocatable :: z_knot(:)
         real(dl), allocatable :: w_knot(:)        
-        real(dl) :: w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10
+        real(dl) :: w0,w1,w2,w3,w4,w5,w6,w7,w8,w9
         real(dl) :: z1,z2,z3,z4,z5,z6,z7,z8,z9,z10
         real(dl) :: z0 = 0.0_dl
         contains
@@ -50,13 +50,13 @@ module LateDE
         w_de = 0
         z = 1.0_dl/a - 1.0_dl
 
-        if (this%model == 1) then
+        if (this%DEmodel == 1) then
             ! Constant w
             w_de = this%w0
-        else if (this%model == 2) then
+        else if (this%DEmodel == 2) then
             ! CPL parametrization w0wa
             w_de = this%w0 + this%w1*(1._dl - a)
-        else if (this%model == 3) then
+        else if (this%DEmodel == 3) then
             ! Constant w: 3 bins
             if (z < this%z1) then
                 w_de = this%w0
@@ -67,7 +67,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if    
-        else if (this%model == 4) then
+        else if (this%DEmodel == 4) then
             ! Constant w: 5 bins
             if (z < this%z1) then
                 w_de = this%w0
@@ -82,7 +82,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if     
-        else if (this%model == 5) then
+        else if (this%DEmodel == 5) then
             ! Constant w: 10 bins
             if (z < this%z1) then
                 w_de = this%w0
@@ -107,7 +107,7 @@ module LateDE
             else
                 w_de = -1.0_dl 
             end if
-        else if (this%model == 6) then
+        else if (this%DEmodel == 6) then
             ! Linear w(z): 2 bins
             
             Delta_z1 = this%z1-this%z0
@@ -124,7 +124,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if 
-        else if (this%model == 7) then
+        else if (this%DEmodel == 7) then
             ! Linear w(z): 3 bins
 
             Delta_z1 = this%z1-this%z0
@@ -146,7 +146,7 @@ module LateDE
             else
                 w_de = -1.0_dl    
             end if              
-        else if (this%model == 8) then
+        else if (this%DEmodel == 8) then
             ! Quadratic w(z): 2 bins
             ! Boundary conditions -see my notes-
 
@@ -167,7 +167,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if
-        else if (this%model == 9) then
+        else if (this%DEmodel == 9) then
             ! Quadratic w(z): 3 bins
             ! Boundary conditions -see my notes-
 
@@ -194,7 +194,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if                
-        else if (this%model == 10) then
+        else if (this%DEmodel == 10) then
             ! Cubic w(z): 2 bins
             ! Boundary conditions -see my notes-
 
@@ -217,7 +217,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if
-        else if (this%model == 11) then
+        else if (this%DEmodel == 11) then
             ! Cubic w(z): 3 bins
             ! Boundary conditions -see my notes-
 
@@ -248,7 +248,7 @@ module LateDE
                 w_de = -1.0_dl    
             end if
 
-        else if (this%model == 12) then
+        else if (this%DEmodel == 12) then
             ! Linear w(z) generic number of bins
             wa_comps = [((this%w_knot(i+1) - this%w_knot(i)) / (this%z_knot(i+1) - this%z_knot(i)), i=1, this%max_num_of_bins)]
             do i = 1, this%max_num_of_bins
@@ -260,7 +260,7 @@ module LateDE
                 end if
             end do  
 
-        else if (this%model == 13) then
+        else if (this%DEmodel == 13) then
             ! Quadratic w(z) generic number of bins
             Nbins = this%max_num_of_bins
             
@@ -302,13 +302,13 @@ module LateDE
         grho_de = 0
         z = 1.0_dl/a - 1.0_dl
 
-        if (this%model == 1) then
+        if (this%DEmodel == 1) then
             ! w constant
             grho_de = grho_de_today * a**(-3 * (1 + this%w0))
-        else if (this%model == 2) then
+        else if (this%DEmodel == 2) then
             ! CPL w0-wa
             grho_de = grho_de_today * a**(-3 * (1 + this%w0 + this%w1)) * exp(-3 * this%w1 * (1 - a))
-        else if (this%model == 3) then
+        else if (this%DEmodel == 3) then
             ! Constant w: 3 bins
             fac1 = (1.0_dl+this%z1)**(3.0_dl * (this%w0 - this%w1))
             fac2 = fac1 * (1.0_dl+this%z2)**(3.0_dl * (this%w1 - this%w2))
@@ -322,7 +322,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac3
             end if    
-        else if (this%model == 4) then
+        else if (this%DEmodel == 4) then
             ! Constant w: 5 bins
             fac1 = (1.0_dl+this%z1)**(3.0_dl * (this%w0 - this%w1))
             fac2 = fac1 * (1.0_dl+this%z2)**(3.0_dl * (this%w1 - this%w2))
@@ -342,7 +342,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac5
             end if    
-        else if (this%model == 5) then
+        else if (this%DEmodel == 5) then
             ! Constant w: 10 bins
             fac1 = (1.0_dl+this%z1)**(3.0_dl * (this%w0 - this%w1))
             fac2 = fac1 * (1.0_dl+this%z2)**(3.0_dl * (this%w1 - this%w2))
@@ -377,7 +377,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac10
             end if    
-        else if (this%model == 6) then
+        else if (this%DEmodel == 6) then
             ! Linear w(z): 2 bins
 
             Delta_z1 = this%z1-this%z0
@@ -401,7 +401,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2
             end if 
-        else if (this%model == 7) then
+        else if (this%DEmodel == 7) then
             ! Linear w(z): 3 bins
 
             Delta_z1 = this%z1-this%z0
@@ -433,7 +433,7 @@ module LateDE
                 grho_de = grho_de_today * fac1 * fac2 * fac3
                                         
             end if             
-        else if(this%model == 8) then 
+        else if(this%DEmodel == 8) then 
             ! Quadratic w(z): 2 bins  
 
             Delta_z1 = this%z1-this%z0
@@ -464,7 +464,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2
             end if 
-        else if(this%model == 9) then 
+        else if(this%DEmodel == 9) then 
             ! Quadratic w(z): 3 bins  
 
             Delta_z1 = this%z1-this%z0
@@ -506,7 +506,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2 * fac3
             end if             
-        else if(this%model == 10) then 
+        else if(this%DEmodel == 10) then 
             ! Cubic w(z): 2 bins
 
             Delta_z1 = this%z1-this%z0
@@ -546,7 +546,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2
             end if
-        else if(this%model == 11) then 
+        else if(this%DEmodel == 11) then 
             ! Cubic w(z): 3 bins
 
             Delta_z1 = this%z1-this%z0
@@ -602,7 +602,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2 * fac3                           
             end if
-        else if (this%model == 12) then
+        else if (this%DEmodel == 12) then
             ! Linear w(z): 2 bins  - User defined number of bins
 
             Delta_z1 = this%z1-this%z0
@@ -628,7 +628,7 @@ module LateDE
                                         ((1+this%z1)/(1+this%z0))**alpha0*exp(3*wa0*(this%z1-this%z0)) * &
                                         ((1+this%z2)/(1+this%z1))**alpha1*exp(3*wa1*(this%z2-this%z1))
             end if    
-        else if(this%model == 13) then 
+        else if(this%DEmodel == 13) then 
             ! Quadratic w(z): 2 bins - User defined number of bins
 
             Delta_z1 = this%z1-this%z0
@@ -705,11 +705,11 @@ module LateDE
         class(TLateDE), intent(inout) :: this
         real(dl), intent(out) :: w, wa
 
-        if (this%model == 1) then
+        if (this%DEmodel == 1) then
             !'w_constant'
             w  = this%w0
             wa = 0.0_dl
-        else if (this%model == 2) then
+        else if (this%DEmodel == 2) then
             !'w0wa'
             w  = this%w0
             wa = this%w1
