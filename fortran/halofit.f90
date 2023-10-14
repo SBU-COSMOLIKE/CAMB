@@ -3420,7 +3420,7 @@
 
         !VM INIT w_const_type as w(z) = constant model
         w_const_type%is_cosmological_constant = .false.
-        w_const_type%model = 1
+        w_const_type%DEmodel = 1
 
         State2 = State !Joao Define another state with same cosmological parameters
 
