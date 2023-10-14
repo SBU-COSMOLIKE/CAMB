@@ -30,6 +30,11 @@ class LateDE(DarkEnergyModel):
 
     _fields_ = [
         ("model", c_int, "select one model among five: (1) w=cte, (2) CPL, (3) 3 bins w, (4) 5 bins w (5) 10 bins w"),
+        # DHFS - BEGINS: New feature
+        ("max_num_of_bins", c_int, "Maximum number of bins"),
+        ("z_knot", AllocatableArrayDouble, "Array of redshift bins"),
+        ("w_knot", AllocatableArrayDouble, "Array of w in each knot"),
+        # DHFS - ENDS: New feature        
         # Equation of State
         ("w0", c_double, "Bin w parameter: EoS for the 0th bin"),
         ("w1", c_double, "Bin w parameter: EoS for the 1st bin"),
@@ -66,10 +71,14 @@ class LateDE(DarkEnergyModel):
         ("fac10", c_double, "Bin w internal parameter: integrated boundary condition between the 1st and 2nd bin")
     ]
 
-    def set_params(self, model,
+    def set_params(self, model, max_num_of_bins,z_knot, w_knot,
                      w0=-1, w1=-1, w2=-1, w3=-1, w4=-1, w5=-1, w6=-1, w7=-1, w8=-1, w9=-1, w10=-1,
                      z1=0.7, z2=1.4, z3=2.1, z4=2.8, z5=3.5, z6=4.2, z7=4.9, z8=5.6, z9=6.3, z10=7.0):
+
         self.model=model 
+        self.max_num_of_bins=max_num_of_bins 
+        self.z_knot=z_knot
+        self.w_knot=w_knot
         self.w0=w0 
         self.w1=w1 
         self.w2=w2
@@ -91,7 +100,6 @@ class LateDE(DarkEnergyModel):
         self.z8=z8
         self.z9=z9
         self.z10=z10
-
 
 @fortran_class
 class DarkEnergyPPF(LateDE):
