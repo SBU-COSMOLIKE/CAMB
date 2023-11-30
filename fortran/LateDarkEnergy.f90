@@ -9,12 +9,8 @@ module LateDE
     real(dl) :: grho_de_today
     type, extends(TDarkEnergyModel) :: TLateDE
         integer  :: DEmodel
-        integer  :: max_num_of_bins
-        real(dl), allocatable :: z_knot(:)
-        real(dl), allocatable :: w_knot(:)        
         real(dl) :: w0,w1,w2,w3,w4,w5,w6,w7,w8,w9
         real(dl) :: z1,z2,z3,z4,z5,z6,z7,z8,z9,z10
-        real(dl) :: z0 = 0.0_dl
         contains
         procedure :: ReadParams => TLateDE_ReadParams
         procedure :: Init => TLateDE_Init
@@ -34,19 +30,11 @@ module LateDE
         class(TLateDE) :: this
         real(dl), intent(in) :: a    
         real(dl) :: w_de, z
-        real(dl) :: wa0,waa0,waaa0, wa1,waa1,waaa1, wa2,waa2,waaa2
-        real(dl) :: Delta_z1, Delta_z2, Delta_z3, Delta_w1, Delta_w2, Delta_w3
+        real(dl) :: wa0,waa0,waaa0, wa1,waa1,waaa1, wa2,waa2,waaa2, wa3,waa3,waaa3, wa4,waa4,waaa4
+        real(dl) :: Delta_z1, Delta_z2, Delta_z3, Delta_z4, Delta_z5
+        real(dl) :: Delta_w1, Delta_w2, Delta_w3, Delta_w4, Delta_w5
         integer  :: i
-        ! DHFS: BEGINS Test
-        integer  :: Nbins, bin
-        real(dl) :: wa_knot, waa_knot
-        real(dl), allocatable :: z_knot(:)
-        real(dl), allocatable :: w_knot(:)        
-        real(dl), allocatable :: Delta_zi(:)
-        real(dl), allocatable :: Delta_wi(:)
-        real(dl), allocatable :: wa_comps(:)  ! comps  = components
-        real(dl), allocatable :: waa_comps(:) ! comps = components
-        
+
         w_de = 0
         z = 1.0_dl/a - 1.0_dl
 
@@ -57,6 +45,15 @@ module LateDE
             ! CPL parametrization w0wa
             w_de = this%w0 + this%w1*(1._dl - a)
         else if (this%DEmodel == 3) then
+            ! Constant w: 2 bins
+            if (z < this%z1) then
+                w_de = this%w0
+            else if (z < this%z2) then
+                w_de = this%w1
+            else
+                w_de = -1.0_dl
+            end if 
+        else if (this%DEmodel == 4) then
             ! Constant w: 3 bins
             if (z < this%z1) then
                 w_de = this%w0
@@ -67,7 +64,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if    
-        else if (this%DEmodel == 4) then
+        else if (this%DEmodel == 5) then
             ! Constant w: 5 bins
             if (z < this%z1) then
                 w_de = this%w0
@@ -82,7 +79,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if     
-        else if (this%DEmodel == 5) then
+        else if (this%DEmodel == 6) then
             ! Constant w: 10 bins
             if (z < this%z1) then
                 w_de = this%w0
@@ -107,10 +104,10 @@ module LateDE
             else
                 w_de = -1.0_dl 
             end if
-        else if (this%DEmodel == 6) then
+        else if (this%DEmodel == 7) then
             ! Linear w(z): 2 bins
             
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_w1 = this%w1-this%w0
             Delta_w2 = -1.0_dl-this%w1
@@ -124,10 +121,10 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if 
-        else if (this%DEmodel == 7) then
+        else if (this%DEmodel == 8) then
             ! Linear w(z): 3 bins
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_z3 = this%z3-this%z2
             Delta_w1 = this%w1-this%w0
@@ -145,12 +142,45 @@ module LateDE
                 w_de = this%w2 + wa2 * (z - this%z2)
             else
                 w_de = -1.0_dl    
-            end if              
-        else if (this%DEmodel == 8) then
+            end if 
+        else if (this%DEmodel == 9) then
+            ! Linear w(z): 5 bins
+
+            Delta_z1 = this%z1-0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_z4 = this%z4-this%z3
+            Delta_z5 = this%z5-this%z4
+
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = this%w3-this%w2
+            Delta_w4 = this%w4-this%w3
+            Delta_w5 = -1.0_dl-this%w4 
+
+            wa0 = Delta_w1/Delta_z1
+            wa1 = Delta_w2/Delta_z2
+            wa2 = Delta_w3/Delta_z3
+            wa3 = Delta_w4/Delta_z4
+            wa4 = Delta_w5/Delta_z5
+            if (z < this%z1) then
+                w_de = this%w0 + wa0 * (z - 0.0_dl)
+            else if (z < this%z2) then
+                w_de = this%w1 + wa1 * (z - this%z1)
+            else if (z < this%z3) then
+                w_de = this%w2 + wa2 * (z - this%z2)
+            else if (z < this%z4) then
+                w_de = this%w3 + wa3 * (z - this%z3)
+            else if (z < this%z5) then
+                w_de = this%w4 + wa4 * (z - this%z4)
+            else
+                w_de = -1.0_dl    
+            end if                          
+        else if (this%DEmodel == 10) then
             ! Quadratic w(z): 2 bins
             ! Boundary conditions -see my notes-
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_w1 = this%w1-this%w0
             Delta_w2 = -1.0_dl-this%w1
@@ -161,23 +191,24 @@ module LateDE
             waa1 =  -Delta_w2/Delta_z2**2
             ! Equation of state
             if (z < this%z1) then
-                w_de = this%w0 + wa0 * (z-this%z0) + waa0*(z-0.0_dl)**2
+                w_de = this%w0 + wa0 * (z-0) + waa0*(z-0.0_dl)**2
             else if (z < this%z2) then
                 w_de = this%w1 + wa1 * (z-this%z1) + waa1*(z-this%z1)**2
             else
                 w_de = -1.0_dl
             end if
-        else if (this%DEmodel == 9) then
+        else if (this%DEmodel == 11) then
             ! Quadratic w(z): 3 bins
             ! Boundary conditions -see my notes-
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_z3 = this%z3-this%z2
             Delta_w1 = this%w1-this%w0
             Delta_w2 = this%w2-this%w1
             Delta_w3 = -1.0_dl-this%w2 
 
+            !See Mathematica Notebook - CAMBLateDE_boundary_conditions.nb
             wa0  = 2._dl*(Delta_w1/Delta_z1 - Delta_w2/Delta_z2 + Delta_w3/Delta_z3)
             waa0 = -Delta_w1/Delta_z1**2 + (2._dl/Delta_z1)*(Delta_w2/Delta_z2 - Delta_w3/Delta_z3)
             wa1  =  2._dl*(Delta_w2/Delta_z2 - Delta_w3/Delta_z3)
@@ -193,12 +224,58 @@ module LateDE
                 w_de = this%w2 + wa2*(z-this%z2) + waa2*(z-this%z2)**2
             else
                 w_de = -1.0_dl
-            end if                
-        else if (this%DEmodel == 10) then
+            end if
+        else if (this%DEmodel == 12) then
+            ! Quadratic w(z): 5 bins
+            ! Boundary conditions -see my notes-
+
+            Delta_z1 = this%z1-0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_z4 = this%z4-this%z3
+            Delta_z5 = this%z5-this%z4
+
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = this%w3-this%w2
+            Delta_w4 = this%w4-this%w3
+            Delta_w5 = -1.0_dl-this%w4 
+
+            !See Mathematica Notebook - CAMBLateDE_boundary_conditions.nb
+            wa0  = 2._dl*(Delta_w1/Delta_z1 - Delta_w2/Delta_z2 + Delta_w3/Delta_z3 - Delta_w4/Delta_z4 + Delta_w5/Delta_z5)
+            waa0 = -Delta_w1/Delta_z1**2 + (2._dl/Delta_z1)*(Delta_w2/Delta_z2 - Delta_w3/Delta_z3 + Delta_w4/Delta_z4 - Delta_w5/Delta_z5)
+            
+            wa1  = 2._dl*(Delta_w2/Delta_z2 - Delta_w3/Delta_z3 + Delta_w4/Delta_z4 - Delta_w5/Delta_z5)
+            waa1 = -Delta_w2/Delta_z2**2 + (2._dl/Delta_z2)*(Delta_w3/Delta_z3 - Delta_w4/Delta_z4 + Delta_w5/Delta_z5)
+            
+            wa2  = 2._dl*(Delta_w3/Delta_z3 - Delta_w4/Delta_z4 + Delta_w5/Delta_z5)
+            waa2 = -Delta_w3/Delta_z3**2 + (2._dl/Delta_z3)*(Delta_w4/Delta_z4 - Delta_w5/Delta_z5)
+
+            wa3  = 2._dl*(Delta_w4/Delta_z4 - Delta_w5/Delta_z5)
+            waa3 = -Delta_w4/Delta_z4**2 + (2._dl/Delta_z4)*(Delta_w5/Delta_z5)
+
+            wa4  = 2._dl*(Delta_w5/Delta_z5)
+            waa4 = -Delta_w5/Delta_z5**2
+
+            ! Equation of state
+            if (z < this%z1) then
+                w_de = this%w0 + wa0*(z-0.0_dl) + waa0*(z-0.0_dl)**2
+            else if (z < this%z2) then
+                w_de = this%w1 + wa1*(z-this%z1) + waa1*(z-this%z1)**2
+            else if (z < this%z3) then
+                w_de = this%w2 + wa2*(z-this%z2) + waa2*(z-this%z2)**2
+            else if (z < this%z4) then
+                w_de = this%w3 + wa3*(z-this%z3) + waa3*(z-this%z3)**2
+            else if (z < this%z5) then
+                w_de = this%w4 + wa4*(z-this%z4) + waa4*(z-this%z4)**2
+            else
+                w_de = -1.0_dl
+            end if             
+        else if (this%DEmodel == 13) then
             ! Cubic w(z): 2 bins
             ! Boundary conditions -see my notes-
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_w1 = this%w1-this%w0
             Delta_w2 = -1.0_dl-this%w1
@@ -211,17 +288,17 @@ module LateDE
             waaa1 = Delta_w2/Delta_z2**3
             ! Equation of state
             if (z < this%z1) then
-                w_de = this%w0 + wa0 * (z-this%z0) + waa0*(z-this%z0)**2 + waaa0*(z-this%z0)**3
+                w_de = this%w0 + wa0 * (z-0) + waa0*(z-0)**2 + waaa0*(z-0)**3
             else if (z < this%z2) then
                 w_de = this%w1 + wa1 * (z-this%z1) + waa1*(z-this%z1)**2 + waaa1*(z-this%z1)**3
             else
                 w_de = -1.0_dl
             end if
-        else if (this%DEmodel == 11) then
+        else if (this%DEmodel == 14) then
             ! Cubic w(z): 3 bins
             ! Boundary conditions -see my notes-
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_z3 = this%z3-this%z2
             Delta_w1 = this%w1-this%w0
@@ -239,7 +316,7 @@ module LateDE
             waaa2 = Delta_w3/Delta_z3**3
             ! Equation of state
             if (z < this%z1) then
-                w_de = this%w0 + wa0 * (z-this%z0) + waa0*(z-this%z0)**2 + waaa0*(z-this%z0)**3
+                w_de = this%w0 + wa0 * (z-0) + waa0*(z-0)**2 + waaa0*(z-0)**3
             else if (z < this%z2) then
                 w_de = this%w1 + wa1 * (z-this%z1) + waa1*(z-this%z1)**2 + waaa1*(z-this%z1)**3
             else if (z < this%z3) then
@@ -248,37 +325,94 @@ module LateDE
                 w_de = -1.0_dl    
             end if
 
-        else if (this%DEmodel == 12) then
-            ! Linear w(z) generic number of bins
-            wa_comps = [((this%w_knot(i+1) - this%w_knot(i)) / (this%z_knot(i+1) - this%z_knot(i)), i=1, this%max_num_of_bins)]
-            do i = 1, this%max_num_of_bins
-                if (z < this%z_knot(i+1)) then
-                    w_de = this%w_knot(i) + wa_comps(i) * (z-this%z_knot(i))
-                exit
-                else
-                    w_de = -1.0_dl
-                end if
-            end do  
+        else if (this%DEmodel == 15) then
+            ! Cubic w(z): 5 bins
+            ! Boundary conditions -see my notes-
 
-        else if (this%DEmodel == 13) then
-            ! Quadratic w(z) generic number of bins
-            Nbins = this%max_num_of_bins
+            Delta_z1 = this%z1-0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_z4 = this%z4-this%z3
+            Delta_z5 = this%z5-this%z4
+
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = this%w3-this%w2
+            Delta_w4 = this%w4-this%w3
+            Delta_w5 = -1.0_dl-this%w4 
+
+            !See Mathematica Notebook - CAMBLateDE_boundary_conditions.nb
+            wa0   = (3*(Delta_w1))/(Delta_z1) - (3*(Delta_w2)*(Delta_z1))/(Delta_z2)**2 - (6*(Delta_w2))/(Delta_z2) + &
+                    ((Delta_w3)*(6*(Delta_z1) + 6*(Delta_z2)))/(Delta_z3)**2 + ((Delta_w3)*(12 + (9*(Delta_z1))/(Delta_z2)))/(Delta_z3) + &
+                    ((Delta_w4)*(-12*(Delta_z1) - 12*(Delta_z2) - 12*(Delta_z3) - (9*(Delta_z1)*(Delta_z3))/(Delta_z2)))/(Delta_z4)**2 + &
+                    ((Delta_w4)*(-24 - (18*(Delta_z1))/(Delta_z2) - (18*(Delta_z1))/(Delta_z3) - (18*(Delta_z2))/(Delta_z3)))/(Delta_z4) + & 
+                    ((Delta_w5)*(24*(Delta_z1) + 24*(Delta_z2) + 24*(Delta_z3) + (18*(Delta_z1)*(Delta_z3))/(Delta_z2) + 24*(Delta_z4) + &
+                    (18*(Delta_z1)*(Delta_z4))/(Delta_z2) + (18*(Delta_z1)*(Delta_z4))/(Delta_z3) + (18*(Delta_z2)*(Delta_z4))/(Delta_z3)))/(Delta_z5)**2 + &
+                    ((Delta_w5)*(48 + (36*(Delta_z1))/(Delta_z2) + (36*(Delta_z1))/(Delta_z3) + (36*(Delta_z2))/(Delta_z3) + (36*(Delta_z1))/(Delta_z4) + &
+                    (36*(Delta_z2))/(Delta_z4) + (36*(Delta_z3))/(Delta_z4) + (27*(Delta_z1)*(Delta_z3))/((Delta_z2)*(Delta_z4))))/(Delta_z5)
+            waa0  = (-3*(Delta_w1))/(Delta_z1)**2 + (6*(Delta_w2))/(Delta_z2)**2 + (9*(Delta_w2))/((Delta_z1)*(Delta_z2)) + &
+                    ((Delta_w3)*(-12 - (9*(Delta_z2))/(Delta_z1)))/(Delta_z3)**2 + ((Delta_w3)*(-18/(Delta_z1) - 18/(Delta_z2)))/(Delta_z3) + &
+                    ((Delta_w4)*(24 + (18*(Delta_z2))/(Delta_z1) + (18*(Delta_z3))/(Delta_z1) + (18*(Delta_z3))/(Delta_z2)))/(Delta_z4)**2 + &
+                    ((Delta_w4)*(36/(Delta_z1) + 36/(Delta_z2) + 36/(Delta_z3) + (27*(Delta_z2))/((Delta_z1)*(Delta_z3))))/(Delta_z4) + &
+                    ((Delta_w5)*(-48 - (36*(Delta_z2))/(Delta_z1) - (36*(Delta_z3))/(Delta_z1) - (36*(Delta_z3))/(Delta_z2) - (36*(Delta_z4))/(Delta_z1) - &
+                    (36*(Delta_z4))/(Delta_z2) - (36*(Delta_z4))/(Delta_z3) - (27*(Delta_z2)*(Delta_z4))/((Delta_z1)*(Delta_z3))))/(Delta_z5)**2 + &
+                    ((Delta_w5)*(-72/(Delta_z1) - 72/(Delta_z2) - 72/(Delta_z3) - (54*(Delta_z2))/((Delta_z1)*(Delta_z3)) - 72/(Delta_z4) - &
+                    (54*(Delta_z2))/((Delta_z1)*(Delta_z4)) - (54*(Delta_z3))/((Delta_z1)*(Delta_z4)) - (54*(Delta_z3))/((Delta_z2)*(Delta_z4))))/(Delta_z5)
+            waaa0 = (Delta_w1)/(Delta_z1)**3 - (3*(Delta_w2))/((Delta_z1)*(Delta_z2)**2) - (3*(Delta_w2))/((Delta_z1)**2*(Delta_z2)) + &
+                    ((Delta_w3)*(6/(Delta_z1) + (3*(Delta_z2))/(Delta_z1)**2))/(Delta_z3)**2 + ((Delta_w3)*(6/(Delta_z1)**2 + 9/((Delta_z1)*(Delta_z2))))/(Delta_z3) + &
+                    ((Delta_w4)*(-12/(Delta_z1) - (6*(Delta_z2))/(Delta_z1)**2 - (6*(Delta_z3))/(Delta_z1)**2 - (9*(Delta_z3))/((Delta_z1)*(Delta_z2))))/&
+                    (Delta_z4)**2 + ((Delta_w4)*(-12/(Delta_z1)**2 - 18/((Delta_z1)*(Delta_z2)) - 18/((Delta_z1)*(Delta_z3)) - &
+                    (9*(Delta_z2))/((Delta_z1)**2*(Delta_z3))))/(Delta_z4) + &
+                    ((Delta_w5)*(24/(Delta_z1) + (12*(Delta_z2))/(Delta_z1)**2 + (12*(Delta_z3))/(Delta_z1)**2 + (18*(Delta_z3))/((Delta_z1)*(Delta_z2)) + &
+                    (12*(Delta_z4))/(Delta_z1)**2 + (18*(Delta_z4))/((Delta_z1)*(Delta_z2)) + (18*(Delta_z4))/((Delta_z1)*(Delta_z3)) + &
+                    (9*(Delta_z2)*(Delta_z4))/((Delta_z1)**2*(Delta_z3))))/(Delta_z5)**2 + &
+                    ((Delta_w5)*(24/(Delta_z1)**2 + 36/((Delta_z1)*(Delta_z2)) + 36/((Delta_z1)*(Delta_z3)) + (18*(Delta_z2))/((Delta_z1)**2*(Delta_z3)) + &
+                    36/((Delta_z1)*(Delta_z4)) + (18*(Delta_z2))/((Delta_z1)**2*(Delta_z4)) + (18*(Delta_z3))/((Delta_z1)**2*(Delta_z4)) + &
+                    (27*(Delta_z3))/((Delta_z1)*(Delta_z2)*(Delta_z4))))/(Delta_z5)
             
-            Delta_zi = [(this%z_knot(i+1)-this%z_knot(i), i=1, Nbins)]  
-            Delta_wi = [(this%w_knot(i+1)-this%w_knot(i), i=1, Nbins)]
+            wa1   = (3*(Delta_w2))/(Delta_z2) - (3*(Delta_w3)*(Delta_z2))/(Delta_z3)**2 - (6*(Delta_w3))/(Delta_z3) + &
+                    ((Delta_w4)*(6*(Delta_z2) + 6*(Delta_z3)))/(Delta_z4)**2 + ((Delta_w4)*(12 + (9*(Delta_z2))/(Delta_z3)))/(Delta_z4) + &
+                    ((Delta_w5)*(-12*(Delta_z2) - 12*(Delta_z3) - 12*(Delta_z4) - (9*(Delta_z2)*(Delta_z4))/(Delta_z3)))/(Delta_z5)**2 + &
+                    ((Delta_w5)*(-24 - (18*(Delta_z2))/(Delta_z3) - (18*(Delta_z2))/(Delta_z4) - (18*(Delta_z3))/(Delta_z4)))/(Delta_z5)
+            waa1  = (-3*(Delta_w2))/(Delta_z2)**2 + (6*(Delta_w3))/(Delta_z3)**2 + (9*(Delta_w3))/((Delta_z2)*(Delta_z3)) + &
+                    ((Delta_w4)*(-12 - (9*(Delta_z3))/(Delta_z2)))/(Delta_z4)**2 + ((Delta_w4)*(-18/(Delta_z2) - 18/(Delta_z3)))/(Delta_z4) + &
+                    ((Delta_w5)*(24 + (18*(Delta_z3))/(Delta_z2) + (18*(Delta_z4))/(Delta_z2) + (18*(Delta_z4))/(Delta_z3)))/(Delta_z5)**2 + &
+                    ((Delta_w5)*(36/(Delta_z2) + 36/(Delta_z3) + 36/(Delta_z4) + (27*(Delta_z3))/((Delta_z2)*(Delta_z4))))/(Delta_z5)
+            waaa1 = (Delta_w2)/(Delta_z2)**3 - (3*(Delta_w3))/((Delta_z2)*(Delta_z3)**2) - (3*(Delta_w3))/((Delta_z2)**2*(Delta_z3)) + &
+                    ((Delta_w4)*(6/(Delta_z2) + (3*(Delta_z3))/(Delta_z2)**2))/(Delta_z4)**2 + ((Delta_w4)*(6/(Delta_z2)**2 + 9/((Delta_z2)*(Delta_z3))))/(Delta_z4) + &
+                    ((Delta_w5)*(-12/(Delta_z2) - (6*(Delta_z3))/(Delta_z2)**2 - (6*(Delta_z4))/(Delta_z2)**2 - (9*(Delta_z4))/((Delta_z2)*(Delta_z3))))/&
+                    (Delta_z5)**2 + ((Delta_w5)*(-12/(Delta_z2)**2 - 18/((Delta_z2)*(Delta_z3)) - 18/((Delta_z2)*(Delta_z4)) - &
+                    (9*(Delta_z3))/((Delta_z2)**2*(Delta_z4))))/(Delta_z5)
             
-            do bin = 1, this%max_num_of_bins
-                if (z < this%z_knot(bin+1)) then
-                    wa_comps  = [(2 * (-1)**i * Delta_wi(Nbins + 1 - i)/Delta_zi(Nbins + 1 - i), i=1, Nbins + 1 - bin)]
-                    wa_knot   = (-1)**(Nbins + 1 + bin) * sum(wa_comps)
-                    waa_comps = [(2 * (-1)**i * Delta_wi(Nbins + 2 - i)/(Delta_zi(bin)*Delta_zi(Nbins + 2 - i)), i=2, Nbins + 1 - bin)]
-                    waa_knot  = -1 * Delta_wi(bin)/Delta_zi(bin)**2 + (-1)**(Nbins + 1 + bin) * sum(waa_comps)
-                    w_de = this%w_knot(bin) + wa_knot * (z-this%z_knot(bin))+ waa_knot * (z-this%z_knot(bin))**2
-                    exit
-                else
-                    w_de = -1.0_dl
-                end if
-            end do
+            wa2   = (3*(Delta_w3))/(Delta_z3) - (3*(Delta_w4)*(Delta_z3))/(Delta_z4)**2 - (6*(Delta_w4))/(Delta_z4) + &
+                    ((Delta_w5)*(6*(Delta_z3) + 6*(Delta_z4)))/(Delta_z5)**2 + ((Delta_w5)*(12 + (9*(Delta_z3))/(Delta_z4)))/(Delta_z5)
+            waa2  = (-3*(Delta_w3))/(Delta_z3)**2 + (6*(Delta_w4))/(Delta_z4)**2 + (9*(Delta_w4))/((Delta_z3)*(Delta_z4)) + &
+                    ((Delta_w5)*(-12 - (9*(Delta_z4))/(Delta_z3)))/(Delta_z5)**2 + ((Delta_w5)*(-18/(Delta_z3) - 18/(Delta_z4)))/(Delta_z5)
+            waaa2 = (Delta_w3)/(Delta_z3)**3 - (3*(Delta_w4))/((Delta_z3)*(Delta_z4)**2) - (3*(Delta_w4))/((Delta_z3)**2*(Delta_z4)) + &
+                    ((Delta_w5)*(6/(Delta_z3) + (3*(Delta_z4))/(Delta_z3)**2))/(Delta_z5)**2 + ((Delta_w5)*(6/(Delta_z3)**2 + 9/((Delta_z3)*(Delta_z4))))/(Delta_z5)
+
+            wa3   = (3*(Delta_w4))/(Delta_z4) - (3*(Delta_w5)*(Delta_z4))/(Delta_z5)**2 - (6*(Delta_w5))/(Delta_z5)
+            waa3  = (-3*(Delta_w4))/(Delta_z4)**2 + (6*(Delta_w5))/(Delta_z5)**2 + (9*(Delta_w5))/((Delta_z4)*(Delta_z5))
+            waaa3 = (Delta_w4)/(Delta_z4)**3 - (3*(Delta_w5))/((Delta_z4)*(Delta_z5)**2) - (3*(Delta_w5))/((Delta_z4)**2*(Delta_z5))
+
+            wa4   = (3*(Delta_w5))/(Delta_z5)
+            waa4  = (-3*(Delta_w5))/(Delta_z5)**2
+            waaa4 = (Delta_w5)/(Delta_z5)**3
+
+            ! Equation of state
+            if (z < this%z1) then
+                w_de = this%w0 + wa0 * (z-0) + waa0*(z-0)**2 + waaa0*(z-0)**3
+            else if (z < this%z2) then
+                w_de = this%w1 + wa1 * (z-this%z1) + waa1*(z-this%z1)**2 + waaa1*(z-this%z1)**3
+            else if (z < this%z3) then
+                w_de = this%w2 + wa2 * (z-this%z2) + waa2*(z-this%z2)**2 + waaa2*(z-this%z2)**3
+            else if (z < this%z4) then
+                w_de = this%w3 + wa3 * (z-this%z3) + waa3*(z-this%z3)**2 + waaa3*(z-this%z3)**3
+            else if (z < this%z5) then    
+                w_de = this%w4 + wa4 * (z-this%z4) + waa4*(z-this%z4)**2 + waaa4*(z-this%z4)**3
+            else 
+                w_de = -1.0_dl
+            end if            
 
         else        
             stop "[Late Fluid DE @TLateDE_w_de] Invalid Dark Energy Model"   
@@ -290,14 +424,15 @@ module LateDE
         class(TLateDE) :: this
         real(dl), intent(in) :: a
         real(dl) :: grho_de, z    
-        real(dl) :: alpha0,alpha1,alpha2,alpha3
-        real(dl) :: Delta_z1, Delta_z2, Delta_z3, Delta_z4
-        real(dl) :: Delta_w1, Delta_w2, Delta_w3, Delta_w4  
+        real(dl) :: alpha0,alpha1,alpha2,alpha3,alpha4
+        real(dl) :: Delta_z1, Delta_z2, Delta_z3, Delta_z4, Delta_z5
+        real(dl) :: Delta_w1, Delta_w2, Delta_w3, Delta_w4, Delta_w5  
         real(dl) :: fac1,fac2,fac3,fac4,fac5,fac6,fac7,fac8,fac9,fac10
         real(dl) :: wa0,waa0,waaa0, A00,A10,A20,A30 ! factors for the 1st bin
         real(dl) :: wa1,waa1,waaa1, A01,A11,A21,A31 ! factors for the 2st bin
         real(dl) :: wa2,waa2,waaa2, A02,A12,A22,A32 ! factors for the 3st bin
         real(dl) :: wa3,waa3,waaa3, A03,A13,A23,A33 ! factors for the 4th bin
+        real(dl) :: wa4,waa4,waaa4, A04,A14,A24,A34 ! factors for the 5th bin
 
         grho_de = 0
         z = 1.0_dl/a - 1.0_dl
@@ -309,6 +444,17 @@ module LateDE
             ! CPL w0-wa
             grho_de = grho_de_today * a**(-3 * (1 + this%w0 + this%w1)) * exp(-3 * this%w1 * (1 - a))
         else if (this%DEmodel == 3) then
+            ! Constant w: 2 bins
+            fac1 = (1.0_dl+this%z1)**(3.0_dl * (this%w0 - this%w1))
+            fac2 = fac1 * (1.0_dl+this%z2)**(3.0_dl * (this%w1 - (-1.0_dl)))      
+            if (z < this%z1) then
+                grho_de = grho_de_today * a**(-3.0_dl * (1.0_dl + this%w0))
+            else if (z < this%z2) then
+                grho_de = grho_de_today * fac1 * a**(-3.0_dl * (1.0_dl + this%w1))
+            else
+                grho_de = grho_de_today * fac2
+            end if  
+        else if (this%DEmodel == 4) then
             ! Constant w: 3 bins
             fac1 = (1.0_dl+this%z1)**(3.0_dl * (this%w0 - this%w1))
             fac2 = fac1 * (1.0_dl+this%z2)**(3.0_dl * (this%w1 - this%w2))
@@ -322,7 +468,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac3
             end if    
-        else if (this%DEmodel == 4) then
+        else if (this%DEmodel == 5) then
             ! Constant w: 5 bins
             fac1 = (1.0_dl+this%z1)**(3.0_dl * (this%w0 - this%w1))
             fac2 = fac1 * (1.0_dl+this%z2)**(3.0_dl * (this%w1 - this%w2))
@@ -342,7 +488,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac5
             end if    
-        else if (this%DEmodel == 5) then
+        else if (this%DEmodel == 6) then
             ! Constant w: 10 bins
             fac1 = (1.0_dl+this%z1)**(3.0_dl * (this%w0 - this%w1))
             fac2 = fac1 * (1.0_dl+this%z2)**(3.0_dl * (this%w1 - this%w2))
@@ -377,10 +523,10 @@ module LateDE
             else
                 grho_de = grho_de_today * fac10
             end if    
-        else if (this%DEmodel == 6) then
+        else if (this%DEmodel == 7) then
             ! Linear w(z): 2 bins
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_w1 = this%w1-this%w0
             Delta_w2 = -1.0_dl-this%w1
@@ -388,23 +534,23 @@ module LateDE
             wa0 = Delta_w1/Delta_z1
             wa1 = Delta_w2/Delta_z2
 
-            alpha0 = 3.0_dl*(1.0_dl+this%w0-wa0*(1.0_dl+this%z0))      
+            alpha0 = 3.0_dl*(1.0_dl+this%w0-wa0*(1.0_dl+0))      
             alpha1 = 3.0_dl*(1.0_dl+this%w1-wa1*(1.0_dl+this%z1))
 
-            fac1 = ((1.0_dl+this%z1)/(1.0_dl+this%z0))**alpha0*exp(3.0_dl*wa0*(this%z1-this%z0))
+            fac1 = ((1.0_dl+this%z1)/(1.0_dl+0))**alpha0*exp(3.0_dl*wa0*(this%z1-0))
             fac2 = ((1.0_dl+this%z2)/(1.0_dl+this%z1))**alpha1*exp(3.0_dl*wa1*(this%z2-this%z1))
 
             if (z < this%z1) then
-                grho_de = grho_de_today * ((1.0_dl+z )/(1.0_dl+this%z0))**alpha0*exp(3.0_dl*wa0*(z-this%z0))
+                grho_de = grho_de_today * ((1.0_dl+z )/(1.0_dl+0))**alpha0*exp(3.0_dl*wa0*(z-0))
             else if (z < this%z2) then
                 grho_de = grho_de_today * fac1 * ((1.0_dl+z)/(1.0_dl+this%z1))**alpha1*exp(3.0_dl*wa1*(z -this%z1))
             else
                 grho_de = grho_de_today * fac1 * fac2
             end if 
-        else if (this%DEmodel == 7) then
+        else if (this%DEmodel == 8) then
             ! Linear w(z): 3 bins
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_z3 = this%z3-this%z2
             Delta_w1 = this%w1-this%w0
@@ -415,16 +561,16 @@ module LateDE
             wa1 = Delta_w2/Delta_z2
             wa2 = Delta_w3/Delta_z3
 
-            alpha0 = 3.0_dl*(1.0_dl+this%w0-wa0*(1.0_dl+this%z0))      
+            alpha0 = 3.0_dl*(1.0_dl+this%w0-wa0*(1.0_dl+0))      
             alpha1 = 3.0_dl*(1.0_dl+this%w1-wa1*(1.0_dl+this%z1))
             alpha2 = 3.0_dl*(1.0_dl+this%w2-wa2*(1.0_dl+this%z2))
 
-            fac1 = ((1.0_dl+this%z1)/(1.0_dl+this%z0))**alpha0*exp(3.0_dl*wa0*(this%z1-this%z0))
+            fac1 = ((1.0_dl+this%z1)/(1.0_dl+0))**alpha0*exp(3.0_dl*wa0*(this%z1-0))
             fac2 = ((1.0_dl+this%z2)/(1.0_dl+this%z1))**alpha1*exp(3.0_dl*wa1*(this%z2-this%z1))
             fac3 = ((1.0_dl+this%z3)/(1.0_dl+this%z2))**alpha2*exp(3.0_dl*wa2*(this%z3-this%z2))
 
             if (z < this%z1) then
-                grho_de = grho_de_today * ((1.0_dl+z )/(1.0_dl+this%z0))**alpha0*exp(3.0_dl*wa0*(z-this%z0))
+                grho_de = grho_de_today * ((1.0_dl+z )/(1.0_dl+0))**alpha0*exp(3.0_dl*wa0*(z-0))
             else if (z < this%z2) then
                 grho_de = grho_de_today * fac1 * ((1.0_dl+z)/(1.0_dl+this%z1))**alpha1*exp(3.0_dl*wa1*(z-this%z1))
             else if (z < this%z3) then
@@ -432,11 +578,57 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2 * fac3
                                         
-            end if             
-        else if(this%DEmodel == 8) then 
+            end if 
+        else if (this%DEmodel == 9) then
+            ! Linear w(z): 5 bins
+
+            Delta_z1 = this%z1-0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_z4 = this%z4-this%z3
+            Delta_z5 = this%z5-this%z4
+
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = this%w3-this%w2
+            Delta_w4 = this%w4-this%w3
+            Delta_w5 = -1.0_dl-this%w4 
+
+            wa0 = Delta_w1/Delta_z1
+            wa1 = Delta_w2/Delta_z2
+            wa2 = Delta_w3/Delta_z3
+            wa3 = Delta_w4/Delta_z4
+            wa4 = Delta_w5/Delta_z5
+
+            alpha0 = 3.0_dl*(1.0_dl+this%w0-wa0*(1.0_dl+0))      
+            alpha1 = 3.0_dl*(1.0_dl+this%w1-wa1*(1.0_dl+this%z1))
+            alpha2 = 3.0_dl*(1.0_dl+this%w2-wa2*(1.0_dl+this%z2))
+            alpha3 = 3.0_dl*(1.0_dl+this%w3-wa3*(1.0_dl+this%z3))
+            alpha4 = 3.0_dl*(1.0_dl+this%w3-wa4*(1.0_dl+this%z4))
+
+            fac1 = ((1.0_dl+this%z1)/(1.0_dl+0))**alpha0*exp(3.0_dl*wa0*(this%z1-0))
+            fac2 = ((1.0_dl+this%z2)/(1.0_dl+this%z1))**alpha1*exp(3.0_dl*wa1*(this%z2-this%z1))
+            fac3 = ((1.0_dl+this%z3)/(1.0_dl+this%z2))**alpha2*exp(3.0_dl*wa2*(this%z3-this%z2))
+            fac4 = ((1.0_dl+this%z4)/(1.0_dl+this%z3))**alpha3*exp(3.0_dl*wa3*(this%z4-this%z3))
+            fac5 = ((1.0_dl+this%z5)/(1.0_dl+this%z4))**alpha4*exp(3.0_dl*wa4*(this%z5-this%z4))
+
+            if (z < this%z1) then
+                grho_de = grho_de_today * ((1.0_dl+z )/(1.0_dl+0))**alpha0*exp(3.0_dl*wa0*(z-0))
+            else if (z < this%z2) then
+                grho_de = grho_de_today * fac1 * ((1.0_dl+z)/(1.0_dl+this%z1))**alpha1*exp(3.0_dl*wa1*(z-this%z1))
+            else if (z < this%z3) then
+                grho_de = grho_de_today * fac1 * fac2 * ((1.0_dl+z)/(1.0_dl+this%z2))**alpha2*exp(3.0_dl*wa2*(z-this%z2))
+            else if (z < this%z4) then
+                grho_de = grho_de_today * fac1 * fac2 * fac3 * ((1.0_dl+z)/(1.0_dl+this%z3))**alpha3*exp(3.0_dl*wa3*(z-this%z3))
+            else if (z < this%z5) then
+                grho_de = grho_de_today * fac1 * fac2 * fac3 * fac4 * ((1.0_dl+z)/(1.0_dl+this%z4))**alpha4*exp(3.0_dl*wa4*(z-this%z4))
+            else
+                grho_de = grho_de_today * fac1 * fac2 * fac3 * fac4 * fac5
+            end if                         
+        else if(this%DEmodel == 10) then 
             ! Quadratic w(z): 2 bins  
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_w1 = this%w1-this%w0
             Delta_w2 = -1.0_dl-this%w1
@@ -446,28 +638,28 @@ module LateDE
             wa1  = 2._dl*Delta_w2/Delta_z2
             waa1 = -Delta_w2/Delta_z2**2 
 
-            A00 = 3._dl*(1._dl + this%w0 - wa0*this%z0 + waa0*this%z0**2._dl)
-            A10 = 3._dl*(wa0 - 2*waa0*this%z0)
+            A00 = 3._dl*(1._dl + this%w0 - wa0*0 + waa0*0**2._dl)
+            A10 = 3._dl*(wa0 - 2*waa0*0)
             A20 = 3._dl*waa0
 
             A01 = 3._dl*(1 + this%w1 - wa1*this%z1 + waa1*this%z1**2._dl)
             A11 = 3._dl*(wa1 - 2*waa1*this%z1)
             A21 = 3._dl*waa1
 
-            fac1 = (((1+this%z1)/(1+this%z0))**(A00-A10+A20))*exp((A10-A20)*(this%z1-this%z0)+A20*(this%z1**2-this%z0**2)/2)
+            fac1 = (((1+this%z1)/(1+0))**(A00-A10+A20))*exp((A10-A20)*(this%z1-0)+A20*(this%z1**2-0**2)/2)
             fac2 = (((1+this%z2)/(1+this%z1))**(A01-A11+A21))*exp((A11-A21)*(this%z2-this%z1)+A21*(this%z2**2-this%z1**2)/2)
 
             if (z < this%z1) then
-                grho_de = grho_de_today * (((1+z)/(1+this%z0))**(A00-A10+A20))*exp((A10-A20)*(z-this%z0)+A20*(z**2-this%z0**2)/2)
+                grho_de = grho_de_today * (((1+z)/(1+0))**(A00-A10+A20))*exp((A10-A20)*(z-0)+A20*(z**2-0**2)/2)
             else if (z < this%z2) then
                 grho_de = grho_de_today * fac1 * (((1+z)/(1+this%z1))**(A01-A11+A21))*exp((A11-A21)*(z-this%z1)+A21*(z**2-this%z1**2)/2)
             else
                 grho_de = grho_de_today * fac1 * fac2
             end if 
-        else if(this%DEmodel == 9) then 
+        else if(this%DEmodel == 11) then 
             ! Quadratic w(z): 3 bins  
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_z3 = this%z3-this%z2
             Delta_w1 = this%w1-this%w0
@@ -481,8 +673,8 @@ module LateDE
             wa2  = 2._dl*Delta_w3/Delta_z3
             waa2 = -Delta_w3/Delta_z3**2
 
-            A00 = 3._dl*(1 + this%w0 - wa0*this%z0 + waa0*this%z0**2._dl)
-            A10 = 3._dl*(wa0 - 2*waa0*this%z0)
+            A00 = 3._dl*(1 + this%w0 - wa0*0 + waa0*0**2._dl)
+            A10 = 3._dl*(wa0 - 2*waa0*0)
             A20 = 3._dl*waa0
 
             A01 = 3._dl*(1 + this%w1 - wa1*this%z1 + waa1*this%z1**2._dl)
@@ -493,23 +685,94 @@ module LateDE
             A12 = 3._dl*(wa2 - 2*waa2*this%z2)
             A22 = 3._dl*waa2
 
-            fac1 = (((1+this%z1)/(1+this%z0))**(A00-A10+A20))*exp((A10-A20)*(this%z1-this%z0)+A20*(this%z1**2-this%z0**2)/2)
+            fac1 = (((1+this%z1)/(1+0))**(A00-A10+A20))*exp((A10-A20)*(this%z1-0)+A20*(this%z1**2-0**2)/2)
             fac2 = (((1+this%z2)/(1+this%z1))**(A01-A11+A21))*exp((A11-A21)*(this%z2-this%z1)+A21*(this%z2**2-this%z1**2)/2)
             fac3 = (((1+this%z3)/(1+this%z2))**(A02-A12+A22))*exp((A12-A22)*(this%z3-this%z2)+A22*(this%z3**2-this%z2**2)/2)  
 
             if (z < this%z1) then
-                grho_de = grho_de_today * (((1+z)/(1+this%z0))**(A00-A10+A20))*exp((A10-A20)*(z -this%z0)+A20*(z**2-this%z0**2)/2)
+                grho_de = grho_de_today * (((1+z)/(1+0))**(A00-A10+A20))*exp((A10-A20)*(z -0)+A20*(z**2-0**2)/2)
             else if (z < this%z2) then
                 grho_de = grho_de_today * fac1 * (((1+z)/(1+this%z1))**(A01-A11+A21))*exp((A11-A21)*(z-this%z1)+A21*(z**2-this%z1**2)/2)
             else if (z < this%z3) then
                 grho_de = grho_de_today * fac1 * fac2 * (((1+z)/(1+this%z2))**(A02-A12+A22))*exp((A12-A22)*(z-this%z2)+A22*(z**2-this%z2**2)/2)
             else
                 grho_de = grho_de_today * fac1 * fac2 * fac3
-            end if             
-        else if(this%DEmodel == 10) then 
+            end if     
+        else if(this%DEmodel == 12) then 
+            ! Quadratic w(z): 5 bins  
+
+            Delta_z1 = this%z1-0
+            Delta_z2 = this%z2-this%z1
+            Delta_z3 = this%z3-this%z2
+            Delta_z4 = this%z4-this%z3
+            Delta_z5 = this%z5-this%z4
+
+            Delta_w1 = this%w1-this%w0
+            Delta_w2 = this%w2-this%w1
+            Delta_w3 = this%w3-this%w2
+            Delta_w4 = this%w4-this%w3
+            Delta_w5 = -1.0_dl-this%w4 
+
+            !See Mathematica Notebook - CAMBLateDE_boundary_conditions.nb
+            wa0  = 2._dl*(Delta_w1/Delta_z1 - Delta_w2/Delta_z2 + Delta_w3/Delta_z3 - Delta_w4/Delta_z4 + Delta_w5/Delta_z5)
+            waa0 = -Delta_w1/Delta_z1**2 + (2._dl/Delta_z1)*(Delta_w2/Delta_z2 - Delta_w3/Delta_z3 + Delta_w4/Delta_z4 - Delta_w5/Delta_z5)
+            
+            wa1  = 2._dl*(Delta_w2/Delta_z2 - Delta_w3/Delta_z3 + Delta_w4/Delta_z4 - Delta_w5/Delta_z5)
+            waa1 = -Delta_w2/Delta_z2**2 + (2._dl/Delta_z2)*(Delta_w3/Delta_z3 - Delta_w4/Delta_z4 + Delta_w5/Delta_z5)
+            
+            wa2  = 2._dl*(Delta_w3/Delta_z3 - Delta_w4/Delta_z4 + Delta_w5/Delta_z5)
+            waa2 = -Delta_w3/Delta_z3**2 + (2._dl/Delta_z3)*(Delta_w4/Delta_z4 - Delta_w5/Delta_z5)
+
+            wa3  = 2._dl*(Delta_w4/Delta_z4 - Delta_w5/Delta_z5)
+            waa3 = -Delta_w4/Delta_z4**2 + (2._dl/Delta_z4)*(Delta_w5/Delta_z5)
+
+            wa4  = 2._dl*(Delta_w5/Delta_z5)
+            waa4 = -Delta_w5/Delta_z5**2
+
+
+            A00 = 3._dl*(1 + this%w0 - wa0*0 + waa0*0**2._dl)
+            A10 = 3._dl*(wa0 - 2*waa0*0)
+            A20 = 3._dl*waa0
+
+            A01 = 3._dl*(1 + this%w1 - wa1*this%z1 + waa1*this%z1**2._dl)
+            A11 = 3._dl*(wa1 - 2*waa1*this%z1)
+            A21 = 3._dl*waa1
+
+            A02 = 3._dl*(1 + this%w2 - wa2*this%z2 + waa2*this%z2**2._dl)
+            A12 = 3._dl*(wa2 - 2*waa2*this%z2)
+            A22 = 3._dl*waa2
+
+            A03 = 3._dl*(1 + this%w3 - wa3*this%z3 + waa3*this%z3**2._dl)
+            A13 = 3._dl*(wa3 - 2*waa3*this%z3)
+            A23 = 3._dl*waa3
+
+            A04 = 3._dl*(1 + this%w4 - wa4*this%z4 + waa4*this%z4**2._dl)
+            A14 = 3._dl*(wa4 - 2*waa4*this%z4)
+            A24 = 3._dl*waa4            
+
+            fac1 = (((1+this%z1)/(1+0))**(A00-A10+A20))*exp((A10-A20)*(this%z1-0)+A20*(this%z1**2-0**2)/2)
+            fac2 = (((1+this%z2)/(1+this%z1))**(A01-A11+A21))*exp((A11-A21)*(this%z2-this%z1)+A21*(this%z2**2-this%z1**2)/2)
+            fac3 = (((1+this%z3)/(1+this%z2))**(A02-A12+A22))*exp((A12-A22)*(this%z3-this%z2)+A22*(this%z3**2-this%z2**2)/2)
+            fac4 = (((1+this%z4)/(1+this%z3))**(A03-A13+A23))*exp((A13-A23)*(this%z4-this%z3)+A23*(this%z4**2-this%z3**2)/2)
+            fac5 = (((1+this%z5)/(1+this%z4))**(A04-A14+A24))*exp((A14-A24)*(this%z5-this%z4)+A24*(this%z5**2-this%z4**2)/2)  
+
+            if (z < this%z1) then
+                grho_de = grho_de_today * (((1+z)/(1+0))**(A00-A10+A20))*exp((A10-A20)*(z -0)+A20*(z**2-0**2)/2)
+            else if (z < this%z2) then
+                grho_de = grho_de_today * fac1 * (((1+z)/(1+this%z1))**(A01-A11+A21))*exp((A11-A21)*(z-this%z1)+A21*(z**2-this%z1**2)/2)
+            else if (z < this%z3) then
+                grho_de = grho_de_today * fac1 * fac2 * (((1+z)/(1+this%z2))**(A02-A12+A22))*exp((A12-A22)*(z-this%z2)+A22*(z**2-this%z2**2)/2)
+            else if (z < this%z4) then
+                grho_de = grho_de_today * fac1 * fac2 * fac3 * (((1+z)/(1+this%z3))**(A03-A13+A23))*exp((A13-A23)*(z-this%z3)+A23*(z**2-this%z3**2)/2)
+            else if (z < this%z5) then    
+                grho_de = grho_de_today * fac1 * fac2 * fac3 * fac4 * (((1+z)/(1+this%z4))**(A04-A14+A24))*exp((A14-A24)*(z-this%z4)+A24*(z**2-this%z4**2)/2)
+            else
+                grho_de = grho_de_today * fac1 * fac2 * fac3 * fac4 * fac5
+            end if                     
+        else if(this%DEmodel == 13) then 
             ! Cubic w(z): 2 bins
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_w1 = this%w1-this%w0
             Delta_w2 = -1.0_dl-this%w1
@@ -521,9 +784,9 @@ module LateDE
             waa1  = -3*Delta_w2/Delta_z2**2
             waaa1 = Delta_w2/Delta_z2**3
 
-            A00 = 3*(1 + this%w0 - wa0*this%z0 + waa0*this%z0**2 - waaa0*this%z0**3)
-            A10 = 3*(wa0 - 2*waa0*this%z0 + 3*waaa0*this%z0**2)
-            A20 = 3*(waa0 - 3*waaa0*this%z0)
+            A00 = 3*(1 + this%w0 - wa0*0 + waa0*0**2 - waaa0*0**3)
+            A10 = 3*(wa0 - 2*waa0*0 + 3*waaa0*0**2)
+            A20 = 3*(waa0 - 3*waaa0*0)
             A30 = 3*waaa0
 
             A01 = 3*(1 + this%w1 - wa1*this%z1 + waa1*this%z1**2 - waaa1*this%z1**3)
@@ -531,25 +794,25 @@ module LateDE
             A21 = 3*(waa1 - 3*waaa1*this%z1)
             A31 = 3*waaa1
 
-            fac1 = (((1+this%z1)/(1+this%z0))**(A00-A10+A20-A30)) * &
-                   exp((A10-A20+A30)*(this%z1-this%z0)+(A20-A30)*(this%z1**2-this%z0**2)/2+A30*(this%z1**3-this%z0**3)/3)
+            fac1 = (((1+this%z1)/(1+0))**(A00-A10+A20-A30)) * &
+                   exp((A10-A20+A30)*(this%z1-0)+(A20-A30)*(this%z1**2-0**2)/2+A30*(this%z1**3-0**3)/3)
 
             fac2 = (((1+this%z2)/(1+this%z1))**(A01-A11+A21-A31)) * &
                    exp((A11-A21+A31)*(this%z2-this%z1)+(A21-A31)*(this%z2**2-this%z1**2)/2+A31*(this%z2**3-this%z1**3)/3)
 
             if (z < this%z1) then
-                grho_de = grho_de_today * (((1+z)/(1+this%z0))**(A00-A10+A20-A30)) * &
-                          exp((A10-A20+A30)*(z-this%z0)+(A20-A30)*(z**2-this%z0**2)/2+A30*(z**3-this%z0**3)/3)
+                grho_de = grho_de_today * (((1+z)/(1+0))**(A00-A10+A20-A30)) * &
+                          exp((A10-A20+A30)*(z-0)+(A20-A30)*(z**2-0**2)/2+A30*(z**3-0**3)/3)
             else if (z < this%z2) then
                 grho_de = grho_de_today * fac1 * (((1+z)/(1+this%z1))**(A01-A11+A21-A31)) * &
                           exp((A11-A21+A31)*(z-this%z1)+(A21-A31)*(z**2-this%z1**2)/2+A31*(z**3-this%z1**3)/3)
             else
                 grho_de = grho_de_today * fac1 * fac2
             end if
-        else if(this%DEmodel == 11) then 
+        else if(this%DEmodel == 14) then 
             ! Cubic w(z): 3 bins
 
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_z3 = this%z3-this%z2
             Delta_w1 = this%w1-this%w0
@@ -566,9 +829,9 @@ module LateDE
             waa2  = -3*Delta_w3/Delta_z3**2
             waaa2 = Delta_w3/Delta_z3**3
 
-            A00 = 3*(1 + this%w0 - wa0*this%z0 + waa0*this%z0**2 - waaa0*this%z0**3)
-            A10 = 3*(wa0 - 2*waa0*this%z0 + 3*waaa0*this%z0**2)
-            A20 = 3*(waa0 - 3*waaa0*this%z0)
+            A00 = 3*(1 + this%w0 - wa0*0 + waa0*0**2 - waaa0*0**3)
+            A10 = 3*(wa0 - 2*waa0*0 + 3*waaa0*0**2)
+            A20 = 3*(waa0 - 3*waaa0*0)
             A30 = 3*waaa0
 
             A01 = 3*(1 + this%w1 - wa1*this%z1 + waa1*this%z1**2 - waaa1*this%z1**3)
@@ -581,8 +844,8 @@ module LateDE
             A22 = 3*(waa2 - 3*waaa2*this%z2)
             A32 = 3*waaa2
 
-            fac1 = (((1+this%z1)/(1+this%z0))**(A00-A10+A20-A30)) * &
-                   exp((A10-A20+A30)*(this%z1-this%z0)+(A20-A30)*(this%z1**2-this%z0**2)/2+A30*(this%z1**3-this%z0**3)/3)
+            fac1 = (((1+this%z1)/(1+0))**(A00-A10+A20-A30)) * &
+                   exp((A10-A20+A30)*(this%z1-0)+(A20-A30)*(this%z1**2-0**2)/2+A30*(this%z1**3-0**3)/3)
 
             fac2 = (((1+this%z2)/(1+this%z1))**(A01-A11+A21-A31)) * &
                    exp((A11-A21+A31)*(this%z2-this%z1)+(A21-A31)*(this%z2**2-this%z1**2)/2+A31*(this%z2**3-this%z1**3)/3)
@@ -591,8 +854,8 @@ module LateDE
                    exp((A12-A22+A32)*(this%z3-this%z2)+(A22-A32)*(this%z3**2-this%z2**2)/2+A32*(this%z3**3-this%z2**3)/3)
 
             if (z < this%z1) then
-                grho_de = grho_de_today * (((1+z)/(1+this%z0))**(A00-A10+A20-A30)) * &
-                          exp((A10-A20+A30)*(z-this%z0)+(A20-A30)*(z**2-this%z0**2)/2+A30*(z**3-this%z0**3)/3)
+                grho_de = grho_de_today * (((1+z)/(1+0))**(A00-A10+A20-A30)) * &
+                          exp((A10-A20+A30)*(z-0)+(A20-A30)*(z**2-0**2)/2+A30*(z**3-0**3)/3)
             else if (z < this%z2) then
                 grho_de = grho_de_today * fac1 * (((1+z)/(1+this%z1))**(A01-A11+A21-A31)) * &
                           exp((A11-A21+A31)*(z-this%z1)+(A21-A31)*(z**2-this%z1**2)/2+A31*(z**3-this%z1**3)/3)
@@ -602,73 +865,134 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2 * fac3                           
             end if
-        else if (this%DEmodel == 12) then
-            ! Linear w(z): 2 bins  - User defined number of bins
 
-            Delta_z1 = this%z1-this%z0
-            Delta_z2 = this%z2-this%z1
-            Delta_w1 = this%w1-this%w0
-            Delta_w2 = -1.0_dl-this%w1
+        else if(this%DEmodel == 15) then 
+            ! Cubic w(z): 5 bins
 
-            wa0 = Delta_w1/Delta_z1
-            wa1 = Delta_w2/Delta_z2
-
-            alpha0 = 3*(1+this%w0-wa0*(1+this%z0))      
-            alpha1 = 3*(1+this%w1-wa1*(1+this%z1))
-
-            if (z < this%z1) then
-                grho_de = grho_de_today * & 
-                                        ((1+z )/(1+this%z0))**alpha0*exp(3*wa0*(z-this%z0))
-            else if (z < this%z2) then
-                grho_de = grho_de_today * &
-                                        ((1+this%z1)/(1+this%z0))**alpha0*exp(3*wa0*(this%z1-this%z0)) * &
-                                        ((1+z )/(1+this%z1))**alpha1*exp(3*wa1*(z -this%z1))
-            else
-                grho_de = grho_de_today * & 
-                                        ((1+this%z1)/(1+this%z0))**alpha0*exp(3*wa0*(this%z1-this%z0)) * &
-                                        ((1+this%z2)/(1+this%z1))**alpha1*exp(3*wa1*(this%z2-this%z1))
-            end if    
-        else if(this%DEmodel == 13) then 
-            ! Quadratic w(z): 2 bins - User defined number of bins
-
-            Delta_z1 = this%z1-this%z0
+            Delta_z1 = this%z1-0
             Delta_z2 = this%z2-this%z1
             Delta_z3 = this%z3-this%z2
+            Delta_z4 = this%z4-this%z3
+            Delta_z5 = this%z5-this%z4
+
             Delta_w1 = this%w1-this%w0
             Delta_w2 = this%w2-this%w1
-            Delta_w3 = -1.0_dl-this%w2 
+            Delta_w3 = this%w3-this%w2
+            Delta_w4 = this%w4-this%w3
+            Delta_w5 = -1.0_dl-this%w4 
 
-            wa0  = 2._dl*(Delta_w1/Delta_z1 - Delta_w2/Delta_z2)
-            waa0 = -Delta_w1/Delta_z1**2 + 2._dl*Delta_w2/(Delta_z1*Delta_z2)
-            wa1  = 2._dl*Delta_w2/Delta_z2
-            waa1 = -Delta_w2/Delta_z2**2 
-            wa2  = 0
-            waa2 = 0
+            !See Mathematica Notebook - CAMBLateDE_boundary_conditions.nb
+            wa0   = (3*(Delta_w1))/(Delta_z1) - (3*(Delta_w2)*(Delta_z1))/(Delta_z2)**2 - (6*(Delta_w2))/(Delta_z2) + &
+                    ((Delta_w3)*(6*(Delta_z1) + 6*(Delta_z2)))/(Delta_z3)**2 + ((Delta_w3)*(12 + (9*(Delta_z1))/(Delta_z2)))/(Delta_z3) + &
+                    ((Delta_w4)*(-12*(Delta_z1) - 12*(Delta_z2) - 12*(Delta_z3) - (9*(Delta_z1)*(Delta_z3))/(Delta_z2)))/(Delta_z4)**2 + &
+                    ((Delta_w4)*(-24 - (18*(Delta_z1))/(Delta_z2) - (18*(Delta_z1))/(Delta_z3) - (18*(Delta_z2))/(Delta_z3)))/(Delta_z4) + & 
+                    ((Delta_w5)*(24*(Delta_z1) + 24*(Delta_z2) + 24*(Delta_z3) + (18*(Delta_z1)*(Delta_z3))/(Delta_z2) + 24*(Delta_z4) + &
+                    (18*(Delta_z1)*(Delta_z4))/(Delta_z2) + (18*(Delta_z1)*(Delta_z4))/(Delta_z3) + (18*(Delta_z2)*(Delta_z4))/(Delta_z3)))/(Delta_z5)**2 + &
+                    ((Delta_w5)*(48 + (36*(Delta_z1))/(Delta_z2) + (36*(Delta_z1))/(Delta_z3) + (36*(Delta_z2))/(Delta_z3) + (36*(Delta_z1))/(Delta_z4) + &
+                    (36*(Delta_z2))/(Delta_z4) + (36*(Delta_z3))/(Delta_z4) + (27*(Delta_z1)*(Delta_z3))/((Delta_z2)*(Delta_z4))))/(Delta_z5)
+            waa0  = (-3*(Delta_w1))/(Delta_z1)**2 + (6*(Delta_w2))/(Delta_z2)**2 + (9*(Delta_w2))/((Delta_z1)*(Delta_z2)) + &
+                    ((Delta_w3)*(-12 - (9*(Delta_z2))/(Delta_z1)))/(Delta_z3)**2 + ((Delta_w3)*(-18/(Delta_z1) - 18/(Delta_z2)))/(Delta_z3) + &
+                    ((Delta_w4)*(24 + (18*(Delta_z2))/(Delta_z1) + (18*(Delta_z3))/(Delta_z1) + (18*(Delta_z3))/(Delta_z2)))/(Delta_z4)**2 + &
+                    ((Delta_w4)*(36/(Delta_z1) + 36/(Delta_z2) + 36/(Delta_z3) + (27*(Delta_z2))/((Delta_z1)*(Delta_z3))))/(Delta_z4) + &
+                    ((Delta_w5)*(-48 - (36*(Delta_z2))/(Delta_z1) - (36*(Delta_z3))/(Delta_z1) - (36*(Delta_z3))/(Delta_z2) - (36*(Delta_z4))/(Delta_z1) - &
+                    (36*(Delta_z4))/(Delta_z2) - (36*(Delta_z4))/(Delta_z3) - (27*(Delta_z2)*(Delta_z4))/((Delta_z1)*(Delta_z3))))/(Delta_z5)**2 + &
+                    ((Delta_w5)*(-72/(Delta_z1) - 72/(Delta_z2) - 72/(Delta_z3) - (54*(Delta_z2))/((Delta_z1)*(Delta_z3)) - 72/(Delta_z4) - &
+                    (54*(Delta_z2))/((Delta_z1)*(Delta_z4)) - (54*(Delta_z3))/((Delta_z1)*(Delta_z4)) - (54*(Delta_z3))/((Delta_z2)*(Delta_z4))))/(Delta_z5)
+            waaa0 = (Delta_w1)/(Delta_z1)**3 - (3*(Delta_w2))/((Delta_z1)*(Delta_z2)**2) - (3*(Delta_w2))/((Delta_z1)**2*(Delta_z2)) + &
+                    ((Delta_w3)*(6/(Delta_z1) + (3*(Delta_z2))/(Delta_z1)**2))/(Delta_z3)**2 + ((Delta_w3)*(6/(Delta_z1)**2 + 9/((Delta_z1)*(Delta_z2))))/(Delta_z3) + &
+                    ((Delta_w4)*(-12/(Delta_z1) - (6*(Delta_z2))/(Delta_z1)**2 - (6*(Delta_z3))/(Delta_z1)**2 - (9*(Delta_z3))/((Delta_z1)*(Delta_z2))))/&
+                    (Delta_z4)**2 + ((Delta_w4)*(-12/(Delta_z1)**2 - 18/((Delta_z1)*(Delta_z2)) - 18/((Delta_z1)*(Delta_z3)) - &
+                    (9*(Delta_z2))/((Delta_z1)**2*(Delta_z3))))/(Delta_z4) + &
+                    ((Delta_w5)*(24/(Delta_z1) + (12*(Delta_z2))/(Delta_z1)**2 + (12*(Delta_z3))/(Delta_z1)**2 + (18*(Delta_z3))/((Delta_z1)*(Delta_z2)) + &
+                    (12*(Delta_z4))/(Delta_z1)**2 + (18*(Delta_z4))/((Delta_z1)*(Delta_z2)) + (18*(Delta_z4))/((Delta_z1)*(Delta_z3)) + &
+                    (9*(Delta_z2)*(Delta_z4))/((Delta_z1)**2*(Delta_z3))))/(Delta_z5)**2 + &
+                    ((Delta_w5)*(24/(Delta_z1)**2 + 36/((Delta_z1)*(Delta_z2)) + 36/((Delta_z1)*(Delta_z3)) + (18*(Delta_z2))/((Delta_z1)**2*(Delta_z3)) + &
+                    36/((Delta_z1)*(Delta_z4)) + (18*(Delta_z2))/((Delta_z1)**2*(Delta_z4)) + (18*(Delta_z3))/((Delta_z1)**2*(Delta_z4)) + &
+                    (27*(Delta_z3))/((Delta_z1)*(Delta_z2)*(Delta_z4))))/(Delta_z5)
+            
+            wa1   = (3*(Delta_w2))/(Delta_z2) - (3*(Delta_w3)*(Delta_z2))/(Delta_z3)**2 - (6*(Delta_w3))/(Delta_z3) + &
+                    ((Delta_w4)*(6*(Delta_z2) + 6*(Delta_z3)))/(Delta_z4)**2 + ((Delta_w4)*(12 + (9*(Delta_z2))/(Delta_z3)))/(Delta_z4) + &
+                    ((Delta_w5)*(-12*(Delta_z2) - 12*(Delta_z3) - 12*(Delta_z4) - (9*(Delta_z2)*(Delta_z4))/(Delta_z3)))/(Delta_z5)**2 + &
+                    ((Delta_w5)*(-24 - (18*(Delta_z2))/(Delta_z3) - (18*(Delta_z2))/(Delta_z4) - (18*(Delta_z3))/(Delta_z4)))/(Delta_z5)
+            waa1  = (-3*(Delta_w2))/(Delta_z2)**2 + (6*(Delta_w3))/(Delta_z3)**2 + (9*(Delta_w3))/((Delta_z2)*(Delta_z3)) + &
+                    ((Delta_w4)*(-12 - (9*(Delta_z3))/(Delta_z2)))/(Delta_z4)**2 + ((Delta_w4)*(-18/(Delta_z2) - 18/(Delta_z3)))/(Delta_z4) + &
+                    ((Delta_w5)*(24 + (18*(Delta_z3))/(Delta_z2) + (18*(Delta_z4))/(Delta_z2) + (18*(Delta_z4))/(Delta_z3)))/(Delta_z5)**2 + &
+                    ((Delta_w5)*(36/(Delta_z2) + 36/(Delta_z3) + 36/(Delta_z4) + (27*(Delta_z3))/((Delta_z2)*(Delta_z4))))/(Delta_z5)
+            waaa1 = (Delta_w2)/(Delta_z2)**3 - (3*(Delta_w3))/((Delta_z2)*(Delta_z3)**2) - (3*(Delta_w3))/((Delta_z2)**2*(Delta_z3)) + &
+                    ((Delta_w4)*(6/(Delta_z2) + (3*(Delta_z3))/(Delta_z2)**2))/(Delta_z4)**2 + ((Delta_w4)*(6/(Delta_z2)**2 + 9/((Delta_z2)*(Delta_z3))))/(Delta_z4) + &
+                    ((Delta_w5)*(-12/(Delta_z2) - (6*(Delta_z3))/(Delta_z2)**2 - (6*(Delta_z4))/(Delta_z2)**2 - (9*(Delta_z4))/((Delta_z2)*(Delta_z3))))/&
+                    (Delta_z5)**2 + ((Delta_w5)*(-12/(Delta_z2)**2 - 18/((Delta_z2)*(Delta_z3)) - 18/((Delta_z2)*(Delta_z4)) - &
+                    (9*(Delta_z3))/((Delta_z2)**2*(Delta_z4))))/(Delta_z5)
+            
+            wa2   = (3*(Delta_w3))/(Delta_z3) - (3*(Delta_w4)*(Delta_z3))/(Delta_z4)**2 - (6*(Delta_w4))/(Delta_z4) + &
+                    ((Delta_w5)*(6*(Delta_z3) + 6*(Delta_z4)))/(Delta_z5)**2 + ((Delta_w5)*(12 + (9*(Delta_z3))/(Delta_z4)))/(Delta_z5)
+            waa2  = (-3*(Delta_w3))/(Delta_z3)**2 + (6*(Delta_w4))/(Delta_z4)**2 + (9*(Delta_w4))/((Delta_z3)*(Delta_z4)) + &
+                    ((Delta_w5)*(-12 - (9*(Delta_z4))/(Delta_z3)))/(Delta_z5)**2 + ((Delta_w5)*(-18/(Delta_z3) - 18/(Delta_z4)))/(Delta_z5)
+            waaa2 = (Delta_w3)/(Delta_z3)**3 - (3*(Delta_w4))/((Delta_z3)*(Delta_z4)**2) - (3*(Delta_w4))/((Delta_z3)**2*(Delta_z4)) + &
+                    ((Delta_w5)*(6/(Delta_z3) + (3*(Delta_z4))/(Delta_z3)**2))/(Delta_z5)**2 + ((Delta_w5)*(6/(Delta_z3)**2 + 9/((Delta_z3)*(Delta_z4))))/(Delta_z5)
 
-            A00 = 3._dl*(1 + this%w0 - wa0*this%z0 + waa0*this%z0**2._dl)
-            A10 = 3._dl*(wa0 - 2*waa0*this%z0)
-            A20 = 3._dl*waa0
+            wa3   = (3*(Delta_w4))/(Delta_z4) - (3*(Delta_w5)*(Delta_z4))/(Delta_z5)**2 - (6*(Delta_w5))/(Delta_z5)
+            waa3  = (-3*(Delta_w4))/(Delta_z4)**2 + (6*(Delta_w5))/(Delta_z5)**2 + (9*(Delta_w5))/((Delta_z4)*(Delta_z5))
+            waaa3 = (Delta_w4)/(Delta_z4)**3 - (3*(Delta_w5))/((Delta_z4)*(Delta_z5)**2) - (3*(Delta_w5))/((Delta_z4)**2*(Delta_z5))
 
-            A01 = 3._dl*(1 + this%w1 - wa1*this%z1 + waa1*this%z1**2._dl)
-            A11 = 3._dl*(wa1 - 2*waa1*this%z1)
-            A21 = 3._dl*waa1
+            wa4   = (3*(Delta_w5))/(Delta_z5)
+            waa4  = (-3*(Delta_w5))/(Delta_z5)**2
+            waaa4 = (Delta_w5)/(Delta_z5)**3
 
-            A02 = 3._dl*(1 + this%w2 - wa2*this%z2 + waa2*this%z2**2._dl)
-            A12 = 3._dl*(wa2 - 2*waa2*this%z2)
-            A22 = 3._dl*waa2
+            A00 = 3*(1 + this%w0 - wa0*0 + waa0*0**2 - waaa0*0**3)
+            A10 = 3*(wa0 - 2*waa0*0 + 3*waaa0*0**2)
+            A20 = 3*(waa0 - 3*waaa0*0)
+            A30 = 3*waaa0
+
+            A01 = 3*(1 + this%w1 - wa1*this%z1 + waa1*this%z1**2 - waaa1*this%z1**3)
+            A11 = 3*(wa1 - 2*waa1*this%z1 + 3*waaa1*this%z1**2)
+            A21 = 3*(waa1 - 3*waaa1*this%z1)
+            A31 = 3*waaa1
+
+            A02 = 3*(1 + this%w2 - wa2*this%z2 + waa2*this%z2**2 - waaa2*this%z2**3)
+            A12 = 3*(wa2 - 2*waa2*this%z2 + 3*waaa2*this%z2**2)
+            A22 = 3*(waa2 - 3*waaa2*this%z2)
+            A32 = 3*waaa2
+
+            fac1 = (((1+this%z1)/(1+0))**(A00-A10+A20-A30)) * &
+                   exp((A10-A20+A30)*(this%z1-0)+(A20-A30)*(this%z1**2-0**2)/2+A30*(this%z1**3-0**3)/3)
+
+            fac2 = (((1+this%z2)/(1+this%z1))**(A01-A11+A21-A31)) * &
+                   exp((A11-A21+A31)*(this%z2-this%z1)+(A21-A31)*(this%z2**2-this%z1**2)/2+A31*(this%z2**3-this%z1**3)/3)
+
+            fac3 = (((1+this%z3)/(1+this%z2))**(A02-A12+A22-A32)) * &
+                   exp((A12-A22+A32)*(this%z3-this%z2)+(A22-A32)*(this%z3**2-this%z2**2)/2+A32*(this%z3**3-this%z2**3)/3)
+
+            fac4 = (((1+this%z4)/(1+this%z3))**(A03-A13+A23-A33)) * &
+                   exp((A13-A23+A33)*(this%z4-this%z3)+(A23-A33)*(this%z4**2-this%z3**2)/2+A33*(this%z4**3-this%z3**3)/3)
+
+            fac5 = (((1+this%z5)/(1+this%z4))**(A04-A14+A24-A34)) * &
+                   exp((A14-A24+A34)*(this%z5-this%z4)+(A24-A34)*(this%z5**2-this%z4**2)/2+A34*(this%z5**3-this%z4**3)/3)
 
             if (z < this%z1) then
-                grho_de = grho_de_today * &
-                          (((1+z )/(1+this%z0))**(A00-A10+A20))*exp((A10-A20)*(z -this%z0)+A20*(z**2-this%z0**2)/2)
-            else if (z < this%z2) then
-                grho_de = grho_de_today * &
-                          (((1+this%z1)/(1+this%z0))**(A00-A10+A20))*exp((A10-A20)*(this%z1-this%z0)+A20*(this%z1**2-this%z0**2)/2) * &
-                          (((1+z )/(1+this%z1))**(A01-A11+A21))*exp((A11-A21)*(z -this%z1)+A21*(z**2 -this%z1**2)/2)
-            else
                 grho_de = grho_de_today * & 
-                          (((1+this%z1)/(1+this%z0))**(A00-A10+A20))*exp((A10-A20)*(this%z1-this%z0)+A20*(this%z1**2-this%z0**2)/2) * &
-                          (((1+this%z2)/(1+this%z1))**(A01-A11+A21))*exp((A11-A21)*(this%z2-this%z1)+A21*(this%z2**2-this%z1**2)/2)          
-            end if                                                    
+                          (((1+z)/(1+0))**(A00-A10+A20-A30)) * &
+                          exp((A10-A20+A30)*(z-0)+(A20-A30)*(z**2-0**2)/2+A30*(z**3-0**3)/3)
+            else if (z < this%z2) then
+                grho_de = grho_de_today * fac1 * & 
+                          (((1+z)/(1+this%z1))**(A01-A11+A21-A31)) * &
+                          exp((A11-A21+A31)*(z-this%z1)+(A21-A31)*(z**2-this%z1**2)/2+A31*(z**3-this%z1**3)/3)
+            else if (z < this%z3) then
+                grho_de = grho_de_today * fac1 * fac2 * & 
+                          (((1+z)/(1+this%z2))**(A02-A12+A22-A32)) * &
+                          exp((A12-A22+A32)*(z-this%z2)+(A22-A32)*(z**2-this%z2**2)/2+A32*(z**3-this%z2**3)/3)
+            else if (z < this%z4) then
+                grho_de = grho_de_today * fac1 * fac2 * fac3 * &
+                          (((1+z)/(1+this%z3))**(A03-A13+A23-A33)) * &
+                          exp((A13-A23+A33)*(z-this%z3)+(A23-A33)*(z**2-this%z3**2)/2+A33*(z**3-this%z3**3)/3)            
+            else if (z < this%z5) then
+                grho_de = grho_de_today * fac1 * fac2 * fac3 * fac4 * & 
+                          (((1+z)/(1+this%z4))**(A04-A14+A24-A34)) * &
+                          exp((A14-A24+A34)*(z-this%z4)+(A24-A34)*(z**2-this%z4**2)/2+A34*(z**3-this%z4**3)/3)             
+            else
+                grho_de = grho_de_today * fac1 * fac2 * fac3 * fac4 * fac5                           
+            end if            
+
         else 
             stop "[Late Fluid DE @TLateDE_grho_de] Invalid Dark Energy Model"
         end if
@@ -705,14 +1029,16 @@ module LateDE
         class(TLateDE), intent(inout) :: this
         real(dl), intent(out) :: w, wa
 
-        if (this%DEmodel == 1) then
-            !'w_constant'
-            w  = this%w0
-            wa = 0.0_dl
-        else if (this%DEmodel == 2) then
+        if (this%DEmodel == 2) then
             !'w0wa'
             w  = this%w0
             wa = this%w1
+        else if (this%DEmodel==1  .or. this%DEmodel==3  .or. this%DEmodel==4  .or. this%DEmodel==5  .or. &
+                 this%DEmodel==6  .or. this%DEmodel==7  .or. this%DEmodel==8  .or. this%DEmodel==9  .or. &
+                 this%DEmodel==10 .or. this%DEmodel==11 .or. this%DEmodel==12 .or. this%DEmodel==13 .or. & 
+                 this%DEmodel==14 .or. this%DEmodel==15) then
+            w  = this%w0
+            wa = 0
         else
             stop "[Late Fluid DE @TLateDE_Effective_w_wa] Invalid Dark Energy Model (TLateDE_Effective_w_wa)"
         endif
