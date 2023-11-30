@@ -3539,7 +3539,10 @@
             endif
 
             !w_lam               = w_lam*(1 + error)**10.d0
-            w_lam                = w_lam*(1 + step*error)
+            !w_lam               = w_lam*(1 + step*error)
+            !DHFS BEGINS
+            w_lam                = w_lam*abs(1 + step*error)
+            !DHFS ENDS
             w_const_type%w0      = w_lam        ! changing the w_const of the model
             State2%CP%DarkEnergy = w_const_type ! passing the DE model to the state
             i = i + 1
