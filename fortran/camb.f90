@@ -418,10 +418,6 @@
 
     if (DarkEnergyModel == 'PPF') then
         allocate (TDarkEnergyPPF::P%DarkEnergy)
-    !DHFS BEGINS
-    ! else if (DarkEnergyModel == 'LATEDE') then 
-        ! allocate (TLateDE::P%DarkEnergy) 
-    !DHFS ENDS     
     else
         ErrMsg = 'Unknown dark energy model: '//trim(DarkEnergyModel)
         return

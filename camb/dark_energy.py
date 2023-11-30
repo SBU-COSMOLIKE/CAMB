@@ -16,7 +16,7 @@ class DarkEnergyModel(F2003Class):
         ("no_perturbations",c_bool)]
 
     def validate_params(self):
-        return True        
+        return True
 
 @fortran_class
 class LateDE(DarkEnergyModel):
@@ -30,11 +30,6 @@ class LateDE(DarkEnergyModel):
 
     _fields_ = [
         ("DEmodel", c_int, "select one model among five: (1) w=cte, (2) CPL, (3) 3 bins w, (4) 5 bins w (5) 10 bins w"),
-        # DHFS - BEGINS: New feature
-        ("max_num_of_bins", c_int, "Maximum number of bins"),
-        ("z_knot", AllocatableArrayDouble, "Array of redshift bins"),
-        ("w_knot", AllocatableArrayDouble, "Array of w in each knot"),
-        # DHFS - ENDS: New feature        
         # Equation of State
         ("w0", c_double, "Bin w parameter: EoS for the 1st bin"),
         ("w1", c_double, "Bin w parameter: EoS for the 2nd bin"),
@@ -45,7 +40,7 @@ class LateDE(DarkEnergyModel):
         ("w6", c_double, "Bin w parameter: EoS for the 7th bin"),
         ("w7", c_double, "Bin w parameter: EoS for the 8th bin"),
         ("w8", c_double, "Bin w parameter: EoS for the 9th bin"),
-        ("w9", c_double, "Bin w parameter: EoS for the 10th bin")
+        ("w9", c_double, "Bin w parameter: EoS for the 10th bin"),
         # Redshift 
         ("z1", c_double, "Bin w parameter: redshift for the 1st bin"),
         ("z2", c_double, "Bin w parameter: redshift for the 2nd bin"),
@@ -59,14 +54,11 @@ class LateDE(DarkEnergyModel):
         ("z10", c_double, " Bin w parameter: redshift for the 10th bin")
     ]
 
-    def set_params(self, DEmodel, max_num_of_bins, z_knot, w_knot,
+    def set_params(self, DEmodel,
                      w0=-1, w1=-1, w2=-1, w3=-1, w4=-1, w5=-1, w6=-1, w7=-1, w8=-1, w9=-1,
                      z1=0.7, z2=1.4, z3=2.1, z4=2.8, z5=3.5, z6=4.2, z7=4.9, z8=5.6, z9=6.3, z10=7.0):
 
-        self.DEmodel=DEmodel 
-        self.max_num_of_bins=max_num_of_bins 
-        self.z_knot=z_knot
-        self.w_knot=w_knot
+        self.DEmodel=DEmodel
         self.w0=w0 
         self.w1=w1 
         self.w2=w2
