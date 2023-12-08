@@ -78,33 +78,8 @@ module LateDE
                 w_de = this%w4
             else
                 w_de = -1.0_dl
-            end if     
-        else if (this%DEmodel == 6) then
-            ! Constant w: 10 bins
-            if (z < this%z1) then
-                w_de = this%w0
-            else if (z < this%z2) then
-                w_de = this%w1
-            else if (z < this%z3) then
-                w_de = this%w2
-            else if (z < this%z4) then
-                w_de = this%w3
-            else if (z < this%z5) then
-                w_de = this%w4
-            else if (z < this%z6) then
-                w_de = this%w5
-            else if (z < this%z7) then
-                w_de = this%w6
-            else if (z < this%z8) then
-                w_de = this%w7
-            else if (z < this%z9) then
-                w_de = this%w8
-            else if (z < this%z10) then
-                w_de  = this%w9  
-            else
-                w_de = -1.0_dl 
             end if
-        else if (this%DEmodel == 7) then
+        else if (this%DEmodel == 6) then
             ! Linear w(z): 2 bins
             
             Delta_z1 = this%z1-0
@@ -121,7 +96,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if 
-        else if (this%DEmodel == 8) then
+        else if (this%DEmodel == 7) then
             ! Linear w(z): 3 bins
 
             Delta_z1 = this%z1-0
@@ -143,7 +118,7 @@ module LateDE
             else
                 w_de = -1.0_dl    
             end if 
-        else if (this%DEmodel == 9) then
+        else if (this%DEmodel == 8) then
             ! Linear w(z): 5 bins
 
             Delta_z1 = this%z1-0
@@ -176,7 +151,7 @@ module LateDE
             else
                 w_de = -1.0_dl    
             end if                          
-        else if (this%DEmodel == 10) then
+        else if (this%DEmodel == 9) then
             ! Quadratic w(z): 2 bins
             ! Boundary conditions -see my notes-
 
@@ -197,7 +172,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if
-        else if (this%DEmodel == 11) then
+        else if (this%DEmodel == 10) then
             ! Quadratic w(z): 3 bins
             ! Boundary conditions -see my notes-
 
@@ -225,7 +200,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if
-        else if (this%DEmodel == 12) then
+        else if (this%DEmodel == 11) then
             ! Quadratic w(z): 5 bins
             ! Boundary conditions -see my notes-
 
@@ -271,7 +246,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if             
-        else if (this%DEmodel == 13) then
+        else if (this%DEmodel == 12) then
             ! Cubic w(z): 2 bins
             ! Boundary conditions -see my notes-
 
@@ -294,7 +269,7 @@ module LateDE
             else
                 w_de = -1.0_dl
             end if
-        else if (this%DEmodel == 14) then
+        else if (this%DEmodel == 13) then
             ! Cubic w(z): 3 bins
             ! Boundary conditions -see my notes-
 
@@ -325,7 +300,7 @@ module LateDE
                 w_de = -1.0_dl    
             end if
 
-        else if (this%DEmodel == 15) then
+        else if (this%DEmodel == 14) then
             ! Cubic w(z): 5 bins
             ! Boundary conditions -see my notes-
 
@@ -489,41 +464,6 @@ module LateDE
                 grho_de = grho_de_today * fac5
             end if    
         else if (this%DEmodel == 6) then
-            ! Constant w: 10 bins
-            fac1 = (1.0_dl+this%z1)**(3.0_dl * (this%w0 - this%w1))
-            fac2 = fac1 * (1.0_dl+this%z2)**(3.0_dl * (this%w1 - this%w2))
-            fac3 = fac2 * (1.0_dl+this%z3)**(3.0_dl * (this%w2 - this%w3))
-            fac4 = fac3 * (1.0_dl+this%z4)**(3.0_dl * (this%w3 - this%w4))
-            fac5 = fac4 * (1.0_dl+this%z5)**(3.0_dl * (this%w4 - this%w5))
-            fac6 = fac5 * (1.0_dl+this%z6)**(3.0_dl * (this%w5 - this%w6))
-            fac7 = fac6 * (1.0_dl+this%z7)**(3.0_dl * (this%w6 - this%w7))
-            fac8 = fac7 * (1.0_dl+this%z8)**(3.0_dl * (this%w7 - this%w8))
-            fac9 = fac8 * (1.0_dl+this%z9)**(3.0_dl * (this%w8 - this%w9))
-            fac10 = fac9 * (1.0_dl+this%z10)**(3.0_dl * (this%w9 - (-1.0_dl)))            
-            if (z < this%z1) then
-                grho_de = grho_de_today * a**(-3.0_dl * (1.0_dl + this%w0))
-            else if (z < this%z2) then
-                grho_de = grho_de_today * fac1 * a**(-3.0_dl * (1.0_dl + this%w1))
-            else if (z < this%z3) then
-                grho_de = grho_de_today * fac2 * a**(-3.0_dl * (1.0_dl + this%w2))
-            else if (z < this%z4) then
-                grho_de = grho_de_today * fac3 * a**(-3.0_dl * (1.0_dl + this%w3))
-            else if (z < this%z5) then
-                grho_de = grho_de_today * fac4 * a**(-3.0_dl * (1.0_dl + this%w4))
-            else if (z < this%z6) then
-                grho_de = grho_de_today * fac5 * a**(-3.0_dl * (1.0_dl + this%w5))
-            else if (z < this%z7) then
-                grho_de = grho_de_today * fac6 * a**(-3.0_dl * (1.0_dl + this%w6))
-            else if (z < this%z8) then
-                grho_de = grho_de_today * fac7 * a**(-3.0_dl * (1.0_dl + this%w7))
-            else if (z < this%z9) then
-                grho_de = grho_de_today * fac8 * a**(-3.0_dl * (1.0_dl + this%w8)) 
-            else if (z < this%z10) then
-                grho_de = grho_de_today * fac9 * a**(-3.0_dl * (1.0_dl + this%w9))
-            else
-                grho_de = grho_de_today * fac10
-            end if    
-        else if (this%DEmodel == 7) then
             ! Linear w(z): 2 bins
 
             Delta_z1 = this%z1-0
@@ -547,7 +487,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2
             end if 
-        else if (this%DEmodel == 8) then
+        else if (this%DEmodel == 7) then
             ! Linear w(z): 3 bins
 
             Delta_z1 = this%z1-0
@@ -579,7 +519,7 @@ module LateDE
                 grho_de = grho_de_today * fac1 * fac2 * fac3
                                         
             end if 
-        else if (this%DEmodel == 9) then
+        else if (this%DEmodel == 8) then
             ! Linear w(z): 5 bins
 
             Delta_z1 = this%z1-0
@@ -625,7 +565,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2 * fac3 * fac4 * fac5
             end if                         
-        else if(this%DEmodel == 10) then 
+        else if(this%DEmodel == 9) then 
             ! Quadratic w(z): 2 bins  
 
             Delta_z1 = this%z1-0
@@ -656,7 +596,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2
             end if 
-        else if(this%DEmodel == 11) then 
+        else if(this%DEmodel == 10) then 
             ! Quadratic w(z): 3 bins  
 
             Delta_z1 = this%z1-0
@@ -698,7 +638,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2 * fac3
             end if     
-        else if(this%DEmodel == 12) then 
+        else if(this%DEmodel == 11) then 
             ! Quadratic w(z): 5 bins  
 
             Delta_z1 = this%z1-0
@@ -769,7 +709,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2 * fac3 * fac4 * fac5
             end if                     
-        else if(this%DEmodel == 13) then 
+        else if(this%DEmodel == 12) then 
             ! Cubic w(z): 2 bins
 
             Delta_z1 = this%z1-0
@@ -809,7 +749,7 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2
             end if
-        else if(this%DEmodel == 14) then 
+        else if(this%DEmodel == 13) then 
             ! Cubic w(z): 3 bins
 
             Delta_z1 = this%z1-0
@@ -866,7 +806,7 @@ module LateDE
                 grho_de = grho_de_today * fac1 * fac2 * fac3                           
             end if
 
-        else if(this%DEmodel == 15) then 
+        else if(this%DEmodel == 14) then 
             ! Cubic w(z): 5 bins
 
             Delta_z1 = this%z1-0
@@ -954,6 +894,16 @@ module LateDE
             A22 = 3*(waa2 - 3*waaa2*this%z2)
             A32 = 3*waaa2
 
+            A03 = 3*(1 + this%w3 - wa3*this%z3 + waa3*this%z3**2 - waaa3*this%z3**3)
+            A13 = 3*(wa3 - 2*waa3*this%z3 + 3*waaa3*this%z3**2)
+            A23 = 3*(waa3 - 3*waaa3*this%z3)
+            A33 = 3*waaa3
+
+            A04 = 3*(1 + this%w4 - wa4*this%z4 + waa4*this%z4**2 - waaa4*this%z4**3)
+            A14 = 3*(wa4 - 2*waa4*this%z4 + 3*waaa4*this%z4**2)
+            A24 = 3*(waa4 - 3*waaa4*this%z4)
+            A34 = 3*waaa4             
+
             fac1 = (((1+this%z1)/(1+0))**(A00-A10+A20-A30)) * &
                    exp((A10-A20+A30)*(this%z1-0)+(A20-A30)*(this%z1**2-0**2)/2+A30*(this%z1**3-0**3)/3)
 
@@ -1036,7 +986,7 @@ module LateDE
         else if (this%DEmodel==1  .or. this%DEmodel==3  .or. this%DEmodel==4  .or. this%DEmodel==5  .or. &
                  this%DEmodel==6  .or. this%DEmodel==7  .or. this%DEmodel==8  .or. this%DEmodel==9  .or. &
                  this%DEmodel==10 .or. this%DEmodel==11 .or. this%DEmodel==12 .or. this%DEmodel==13 .or. & 
-                 this%DEmodel==14 .or. this%DEmodel==15) then
+                 this%DEmodel==14) then
             w  = this%w0
             wa = 0
         else
