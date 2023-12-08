@@ -5,7 +5,7 @@ Fortran module LateDarkEnergy.f90
 
 DEmodel == Integer number
 
-Constant w0wa == 1
+Constant w == 1
 w0wa == 2
 
 Constant w: 2 bins == 3
