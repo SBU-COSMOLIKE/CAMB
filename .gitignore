@@ -40,3 +40,5 @@ camb/HighLExtrapTemplate_lenspotentialCls.dat
 .vscode/
 docs/*.txt
 docs/*.pdf
+fortran/halofit_multifluid.f90
+fortran/halofit_vivian_diogo_test.f90

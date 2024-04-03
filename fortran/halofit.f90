@@ -3518,7 +3518,7 @@
         do
             dlsb_eq  = State2%TimeOfz(redshift) 
             if (redshift > 3.0) then
-                threshold = 1.0e-3
+                threshold = 7.5e-4
                 step = 50.d0
            else if (redshift > 1.50) then
                 threshold = 1d-5
