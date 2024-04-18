@@ -51,12 +51,16 @@ class LateDE(DarkEnergyModel):
         ("z7", c_double, "Bin w parameter: redshift for the 7th bin"),
         ("z8", c_double, "Bin w parameter: redshift for the 8th bin"),
         ("z9", c_double, "Bin w parameter: redshift for the 9th bin"),
-        ("z10", c_double, " Bin w parameter: redshift for the 10th bin")
+        ("z10", c_double, " Bin w parameter: redshift for the 10th bin"),
+        # Tanh
+        ("zc", c_double, "Transition redshift"),
+        ("sigma", c_double, "Transition width"),
     ]
 
     def set_params(self, DEmodel,
                      w0=-1, w1=-1, w2=-1, w3=-1, w4=-1, w5=-1, w6=-1, w7=-1, w8=-1, w9=-1,
-                     z1=0.7, z2=1.4, z3=2.1, z4=2.8, z5=3.5, z6=4.2, z7=4.9, z8=5.6, z9=6.3, z10=7.0):
+                     z1=0.7, z2=1.4, z3=2.1, z4=2.8, z5=3.5, z6=4.2, z7=4.9, z8=5.6, z9=6.3, z10=7.0,
+                     zc = 1, sigma = 0.1):
 
         self.DEmodel=DEmodel
         self.w0=w0 
@@ -79,6 +83,8 @@ class LateDE(DarkEnergyModel):
         self.z8=z8
         self.z9=z9
         self.z10=z10
+        self.sigma=sigma
+        self.zc=zc
 
 @fortran_class
 class DarkEnergyPPF(LateDE):

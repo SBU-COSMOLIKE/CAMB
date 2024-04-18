@@ -11,6 +11,7 @@ module LateDE
         integer  :: DEmodel
         real(dl) :: w0,w1,w2,w3,w4,w5,w6,w7,w8,w9
         real(dl) :: z1,z2,z3,z4,z5,z6,z7,z8,z9,z10
+        real(dl) :: zc, sigma ! JVR: added tanh parameters
         contains
         procedure :: ReadParams => TLateDE_ReadParams
         procedure :: Init => TLateDE_Init
@@ -28,9 +29,9 @@ module LateDE
 
     function TLateDE_w_de(this, a) result(w_de)
         class(TLateDE) :: this
-        real(dl), intent(in) :: a    
+        real(dl), intent(in) :: a
         real(dl) :: w_de, z
-        real(dl) :: wa0,waa0,waaa0, wa1,waa1,waaa1, wa2,waa2,waaa2, wa3,waa3,waaa3, wa4,waa4,waaa4
+        real(dl) :: wa0,waa0,waaa0, wa1,waa1,waaa1, wa2,waa2,waaa2, wa3,waa3,waaa3, wa4,waa4,waaa4, a1, a2
         real(dl) :: Delta_z1, Delta_z2, Delta_z3, Delta_z4, Delta_z5
         real(dl) :: Delta_w1, Delta_w2, Delta_w3, Delta_w4, Delta_w5
         integer  :: i
@@ -388,7 +389,17 @@ module LateDE
             else 
                 w_de = -1.0_dl
             end if            
-
+        else if (this%DEmodel == 15) then
+            ! tanh model - w(z) transition
+            if (z < this%z1 - this%sigma) then
+                w_de = this%w0
+            else if (z > this%z1 + this%sigma) then
+                w_de = this%w1
+            else
+                a1 = (this%w1 - this%w0)/this%sigma/2._dl
+                a2 = this%w1 - a1*(this%z1 + this%sigma)
+                w_de = a2 + a1*z
+            end if
         else        
             stop "[Late Fluid DE @TLateDE_w_de] Invalid Dark Energy Model"   
         end if
@@ -398,7 +409,7 @@ module LateDE
         ! Returns 8*pi*G * rho_de, no factor of a^4
         class(TLateDE) :: this
         real(dl), intent(in) :: a
-        real(dl) :: grho_de, z    
+        real(dl) :: grho_de, z, a1, a2
         real(dl) :: alpha0,alpha1,alpha2,alpha3,alpha4
         real(dl) :: Delta_z1, Delta_z2, Delta_z3, Delta_z4, Delta_z5
         real(dl) :: Delta_w1, Delta_w2, Delta_w3, Delta_w4, Delta_w5  
@@ -408,6 +419,8 @@ module LateDE
         real(dl) :: wa2,waa2,waaa2, A02,A12,A22,A32 ! factors for the 3st bin
         real(dl) :: wa3,waa3,waaa3, A03,A13,A23,A33 ! factors for the 4th bin
         real(dl) :: wa4,waa4,waaa4, A04,A14,A24,A34 ! factors for the 5th bin
+        integer :: i
+        integer, parameter :: npts = 50
 
         grho_de = 0
         z = 1.0_dl/a - 1.0_dl
@@ -942,6 +955,17 @@ module LateDE
             else
                 grho_de = grho_de_today * fac1 * fac2 * fac3 * fac4 * fac5                           
             end if            
+        else if (this%DEmodel == 15) then 
+            ! tanh model
+            a1 = (this%w1 - this%w0)/this%sigma/2._dl
+            a2 = this%w1 - a1*(this%z1 + this%sigma)
+            if (z < this%z1 - this%sigma) then
+                grho_de = grho_de_today * a**(-3._dl*(1._dl + this%w0))
+            else if (z < this%z1 + this%sigma) then
+                grho_de = grho_de_today * (1 + this%z1 - this%sigma)**(3._dl*(1+this%w0)) * (z/(this%z1 - this%sigma))**(3*(1+a2)) * ((1+z)/(1+this%z1 - this%sigma))**(3*a1)*exp(3*a1*(z - (this%z1 - this%sigma)))
+            else
+                grho_de = grho_de_today * (1 + this%z1 - this%sigma)**(3._dl*(1+this%w0)) * ((this%z1 + this%sigma)/(this%z1 - this%sigma))**(3*(1+a2)) * ((1+ this%z1 + this%sigma)/(1+this%z1 - this%sigma))**(3*a1)*exp(3*a1*2*this%sigma) * (a*(1+this%zc+this%sigma))**(-3._dl*(1+this%w1))
+            end if
 
         else 
             stop "[Late Fluid DE @TLateDE_grho_de] Invalid Dark Energy Model"
