@@ -6,7 +6,7 @@ module LateDE
     implicit none
 
     private
-    real(dl) :: grho_de_today
+    real(dl) :: grho_de_today, Integrate_tanh
     type, extends(TDarkEnergyModel) :: TLateDE
         integer  :: DEmodel
         real(dl) :: w0,w1,w2,w3,w4,w5,w6,w7,w8,w9
@@ -402,11 +402,7 @@ module LateDE
             end if
             !DHFS MOD TANH START
         else if (this%DEmodel == 16) then 
-            ! if ( z < this%z1 ) then
                 w_de = this%w0 + (this%w1-this%w0)/2._dl * ( 1.0_dl + tanh((z - this%z1)/this%sigma) )
-            ! else
-                ! w_de = this%w0 + (this%w1-this%w0)/2._dl * ( 1.0_dl + tanh((this%z1 - this%zc)/this%sigma) )
-            ! end if
             !DHFS MOD TANH END
         else        
             stop "[Late Fluid DE @TLateDE_w_de] Invalid Dark Energy Model"   
@@ -990,7 +986,7 @@ module LateDE
             if (z < this%z1+5.0*this%sigma) then
                 grho_de = grho_de_today * exp( 3.0_dl * Integrate_Romberg(this, kernel_tanh, 0.0_dl, z, 1d-5, 20, 100) ) 
             else 
-                grho_de = grho_de_today *(z/(this%z1+5.0_dl*this%sigma))**(3.0_dl*(1.0_dl+this%w1)) * exp( 3.0_dl * Integrate_Romberg(this, kernel_tanh, 0.0_dl, this%z1+5.0*this%sigma, 1d-5, 20, 100) ) 
+                grho_de = grho_de_today *(z/(this%z1+5.0_dl*this%sigma))**(3.0_dl*(1.0_dl+this%w1)) * exp( 3.0_dl * Integrate_tanh ) 
             end if                    
         !DHFS MOD TANH START    
         else 
@@ -1008,6 +1004,11 @@ module LateDE
             type is (CAMBdata)
             grho_de_today = State%grhov
         end select        
+        !DHFS MOD TANH START
+        if (this%DEmodel == 16) then
+            Integrate_tanh = Integrate_Romberg(this, kernel_tanh, 0.0_dl, this%z1+5.0*this%sigma, 1d-5, 20, 100)
+        end if
+        !DHFS MOD TANH END
     end subroutine TLateDE_Init
 
     subroutine TLateDE_ReadParams(this, Ini)
