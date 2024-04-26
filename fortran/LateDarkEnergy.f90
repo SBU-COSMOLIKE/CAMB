@@ -402,6 +402,7 @@ module LateDE
             end if
             !DHFS MOD TANH START
         else if (this%DEmodel == 16) then 
+                ! Numeric tanh
                 w_de = this%w0 + (this%w1-this%w0)/2._dl * ( 1.0_dl + tanh((z - this%z1)/this%sigma) )
             !DHFS MOD TANH END
         else        
@@ -974,22 +975,21 @@ module LateDE
             ! tanh model
             a1 = (this%w1 - this%w0)/this%sigma/2._dl
             a2 = this%w1 - a1*(this%z1 + this%sigma)
-            za = this%z1-this%sigma
-            zb = this%z1+this%sigma
+            za = this%z1 - this%sigma
+            zb = this%z1 + this%sigma
             if (z < this%z1 - this%sigma) then
-                grho_de = grho_de_today * (1+z)**(3._dl*(1._dl + this%w0))
+                grho_de = grho_de_today * (1.0_dl+z)**(3._dl*(1._dl + this%w0))
             else if (z > this%z1 + this%sigma) then
                 grho_de = grho_de_today * (1.0_dl + za)**(3._dl*(1+this%w0)) * &
                  exp(a1*(zb-za)) * ((1.0_dl + zb)/(1.0_dl + za))**(1.0_dl - a1 + a2) * &
                  ((1.0_dl+z)/(1.0_dl + zb))**(3.0_dl*(1.0_dl + this%w1))
-                !grho_de_today * (1 + this%z1 - this%sigma)**(3._dl*(1+this%w0)) * (z/(this%z1 - this%sigma))**(3*(1+a2)) * ((1+z)/(1+this%z1 - this%sigma))**(3*a1)*exp(3*a1*(z - (this%z1 - this%sigma)))
             else
                 grho_de = grho_de_today * (1.0_dl + za)**(3._dl*(1+this%w0)) * &
-                 ( exp(a1*(z-za)) * ((1.0_dl + z)/(1.0_dl + za))**(1.0_dl-a1+a2))
-                 ! ((this%z1 + this%sigma)/(this%z1 - this%sigma))**(3*(1+a2)) * ((1+ this%z1 + this%sigma)/(1+this%z1 - this%sigma))**(3*a1)*exp(3*a1*2*this%sigma) * (a*(1+this%z1+this%sigma))**(-3._dl*(1+this%w1))
+                 ( exp(a1*(z-za)) * ((1.0_dl + z)/(1.0_dl + za))**(1.0_dl-a1+a2))                
             end if
         !DHFS MOD TANH START    
-        else if (this%DEmodel == 16) then            
+        else if (this%DEmodel == 16) then   
+            ! Numeric tanh         
             if (z < this%z1+5.0*this%sigma) then
                 grho_de = grho_de_today * exp( 3.0_dl * Integrate_Romberg(this, kernel_tanh, 0.0_dl, z, 1d-5, 20, 100) ) 
             else 
@@ -1013,6 +1013,7 @@ module LateDE
         end select        
         !DHFS MOD TANH START
         if (this%DEmodel == 16) then
+            ! Numeric tanh
             Integrate_tanh = Integrate_Romberg(this, kernel_tanh, 0.0_dl, this%z1+5.0*this%sigma, 1d-5, 20, 100)
         end if
         !DHFS MOD TANH END
