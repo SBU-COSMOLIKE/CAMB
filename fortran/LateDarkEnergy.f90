@@ -424,7 +424,7 @@ module LateDE
         ! Returns 8*pi*G * rho_de, no factor of a^4
         class(TLateDE) :: this
         real(dl), intent(in) :: a
-        real(dl) :: grho_de, z, a1, a2
+        real(dl) :: grho_de, z, a1, a2, za, zb
         real(dl) :: alpha0,alpha1,alpha2,alpha3,alpha4
         real(dl) :: Delta_z1, Delta_z2, Delta_z3, Delta_z4, Delta_z5
         real(dl) :: Delta_w1, Delta_w2, Delta_w3, Delta_w4, Delta_w5  
@@ -974,12 +974,19 @@ module LateDE
             ! tanh model
             a1 = (this%w1 - this%w0)/this%sigma/2._dl
             a2 = this%w1 - a1*(this%z1 + this%sigma)
+            za = this%z1-this%sigma
+            zb = this%z1+this%sigma
             if (z < this%z1 - this%sigma) then
-                grho_de = grho_de_today * a**(-3._dl*(1._dl + this%w0))
-            else if (z < this%z1 + this%sigma) then
-                grho_de = grho_de_today * (1 + this%z1 - this%sigma)**(3._dl*(1+this%w0)) * (z/(this%z1 - this%sigma))**(3*(1+a2)) * ((1+z)/(1+this%z1 - this%sigma))**(3*a1)*exp(3*a1*(z - (this%z1 - this%sigma)))
+                grho_de = grho_de_today * (1+z)**(3._dl*(1._dl + this%w0))
+            else if (z > this%z1 + this%sigma) then
+                grho_de = grho_de_today * (1.0_dl + za)**(3._dl*(1+this%w0)) * &
+                 exp(a1*(zb-za)) * ((1.0_dl + zb)/(1.0_dl + za))**(1.0_dl - a1 + a2) * &
+                 ((1.0_dl+z)/(1.0_dl + zb))**(3.0_dl*(1.0_dl + this%w1))
+                !grho_de_today * (1 + this%z1 - this%sigma)**(3._dl*(1+this%w0)) * (z/(this%z1 - this%sigma))**(3*(1+a2)) * ((1+z)/(1+this%z1 - this%sigma))**(3*a1)*exp(3*a1*(z - (this%z1 - this%sigma)))
             else
-                grho_de = grho_de_today * (1 + this%z1 - this%sigma)**(3._dl*(1+this%w0)) * ((this%z1 + this%sigma)/(this%z1 - this%sigma))**(3*(1+a2)) * ((1+ this%z1 + this%sigma)/(1+this%z1 - this%sigma))**(3*a1)*exp(3*a1*2*this%sigma) * (a*(1+this%zc+this%sigma))**(-3._dl*(1+this%w1))
+                grho_de = grho_de_today * (1.0_dl + za)**(3._dl*(1+this%w0)) * &
+                 ( exp(a1*(z-za)) * ((1.0_dl + z)/(1.0_dl + za))**(1.0_dl-a1+a2))
+                 ! ((this%z1 + this%sigma)/(this%z1 - this%sigma))**(3*(1+a2)) * ((1+ this%z1 + this%sigma)/(1+this%z1 - this%sigma))**(3*a1)*exp(3*a1*2*this%sigma) * (a*(1+this%z1+this%sigma))**(-3._dl*(1+this%w1))
             end if
         !DHFS MOD TANH START    
         else if (this%DEmodel == 16) then            
