@@ -400,10 +400,29 @@ module LateDE
                 a2 = this%w1 - a1*(this%z1 + this%sigma)
                 w_de = a2 + a1*z
             end if
+            !DHFS MOD TANH START
+        else if (this%DEmodel == 16) then 
+            ! if ( z < this%z1 ) then
+                w_de = this%w0 + (this%w1-this%w0)/2._dl * ( 1.0_dl + tanh((z - this%z1)/this%sigma) )
+            ! else
+                ! w_de = this%w0 + (this%w1-this%w0)/2._dl * ( 1.0_dl + tanh((this%z1 - this%zc)/this%sigma) )
+            ! end if
+            !DHFS MOD TANH END
         else        
             stop "[Late Fluid DE @TLateDE_w_de] Invalid Dark Energy Model"   
         end if
     end function TLateDE_w_de
+
+    !DHFS MOD TANH START
+    function kernel_tanh(this,z)
+        class(TLateDE) :: this
+        real(dl) :: kernel_tanh, w_de
+        real(dl), intent(in) :: z
+
+        w_de = this%w0 + (this%w1-this%w0)/2._dl * ( 1.0_dl + tanh((z-this%z1)/this%sigma) )
+        kernel_tanh = (1.0_dl + w_de) / (1.0_dl+z)
+    end function kernel_tanh
+    !DHFS MOD TANH END
 
     function TLateDE_grho_de(this, a) result(grho_de)
         ! Returns 8*pi*G * rho_de, no factor of a^4
@@ -966,7 +985,14 @@ module LateDE
             else
                 grho_de = grho_de_today * (1 + this%z1 - this%sigma)**(3._dl*(1+this%w0)) * ((this%z1 + this%sigma)/(this%z1 - this%sigma))**(3*(1+a2)) * ((1+ this%z1 + this%sigma)/(1+this%z1 - this%sigma))**(3*a1)*exp(3*a1*2*this%sigma) * (a*(1+this%zc+this%sigma))**(-3._dl*(1+this%w1))
             end if
-
+        !DHFS MOD TANH START    
+        else if (this%DEmodel == 16) then            
+            if (z < this%z1+5.0*this%sigma) then
+                grho_de = grho_de_today * exp( 3.0_dl * Integrate_Romberg(this, kernel_tanh, 0.0_dl, z, 1d-5, 20, 100) ) 
+            else 
+                grho_de = grho_de_today *(z/(this%z1+5.0_dl*this%sigma))**(3.0_dl*(1.0_dl+this%w1)) * exp( 3.0_dl * Integrate_Romberg(this, kernel_tanh, 0.0_dl, this%z1+5.0*this%sigma, 1d-5, 20, 100) ) 
+            end if                    
+        !DHFS MOD TANH START    
         else 
             stop "[Late Fluid DE @TLateDE_grho_de] Invalid Dark Energy Model"
         end if

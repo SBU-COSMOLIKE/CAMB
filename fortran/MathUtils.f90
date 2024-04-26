@@ -86,7 +86,9 @@
     Integrate_Romberg=g0
     if (i > max_it .and. abs(error) > tol)  then
         write(*,*) 'Warning: Integrate_Romberg failed to converge; '
-        write (*,*)'integral, error, tol:', Integrate_Romberg,error, tol
+        !DHFS MOD START
+        write (*,*)'a, b, integral, error, tol:', a, b, Integrate_Romberg, error, tol
+        !DHFS MOD END
     end if
 
     end function Integrate_Romberg
